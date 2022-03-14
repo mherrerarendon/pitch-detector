@@ -4,8 +4,28 @@ mod fft_space;
 mod peak_iter;
 mod utils;
 
+use fft_space::FftSpace;
+
 pub trait FrequencyDetector {
     fn detect_frequency<I: IntoIterator>(&mut self, signal: I) -> Option<f64>
+    where
+        <I as IntoIterator>::Item: std::borrow::Borrow<f64>,
+    {
+        let signal_iter = signal.into_iter();
+        let mut fft_space = FftSpace::new(
+            signal_iter
+                .size_hint()
+                .1
+                .expect("Signal length is not known"),
+        );
+        self.detect_frequency_with_fft_space(signal_iter, &mut fft_space)
+    }
+
+    fn detect_frequency_with_fft_space<I: IntoIterator>(
+        &mut self,
+        signal: I,
+        fft_space: &mut FftSpace,
+    ) -> Option<f64>
     where
         <I as IntoIterator>::Item: std::borrow::Borrow<f64>;
 }
@@ -31,9 +51,8 @@ mod tests {
     use anyhow::Result;
 
     pub(crate) trait FrequencyDetectorTest {
-        fn spectrum(&self) -> Vec<(usize, f64)>;
-
-        fn name(&self) -> &'static str;
+        fn spectrum() -> Vec<(usize, f64)>;
+        fn name() -> &'static str;
     }
 
     #[test]
