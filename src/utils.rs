@@ -27,7 +27,7 @@ pub mod test_utils {
     use float_cmp::ApproxEq;
 
     use super::*;
-    use crate::FrequencyDetector;
+    use crate::{tests::FrequencyDetectorTest, FrequencyDetector};
     use plotters::prelude::*;
     use serde::Deserialize;
     use std::fs;
@@ -91,7 +91,7 @@ pub mod test_utils {
         Ok(())
     }
 
-    pub fn test_fundamental_freq<D: FrequencyDetector>(
+    pub fn test_fundamental_freq<D: FrequencyDetector + FrequencyDetectorTest>(
         detector: &mut D,
         samples_file: &str,
         expected_freq: f64,

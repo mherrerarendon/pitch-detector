@@ -17,14 +17,8 @@ impl RawFftDetector {
                 .map(|(i, (amplitude, _))| (i, amplitude)),
         )
     }
-}
 
-impl FrequencyDetector for RawFftDetector {
-    fn detect_frequency_with_fft_space<I: IntoIterator>(
-        &mut self,
-        signal: I,
-        fft_space: &mut FftSpace,
-    ) -> Option<f64>
+    fn process_fft<I: IntoIterator>(signal: I, fft_space: &mut FftSpace)
     where
         <I as IntoIterator>::Item: std::borrow::Borrow<f64>,
     {
@@ -47,8 +41,20 @@ impl FrequencyDetector for RawFftDetector {
 
         let (space, scratch) = fft_space.workspace();
         fft.process_with_scratch(space, scratch);
+    }
+}
+
+impl FrequencyDetector for RawFftDetector {
+    fn detect_frequency_with_fft_space<I: IntoIterator>(
+        &mut self,
+        signal: I,
+        fft_space: &mut FftSpace,
+    ) -> Option<f64>
+    where
+        <I as IntoIterator>::Item: std::borrow::Borrow<f64>,
+    {
+        Self::process_fft(signal, fft_space);
         Self::spectrum(fft_space)
-            .into_iter()
             .fft_peaks(40, 10.)
             .reduce(|accum, item| if item.1 > accum.1 { item } else { accum })
             .map(|item| Partial {
@@ -65,15 +71,20 @@ mod tests {
     use crate::{tests::FrequencyDetectorTest, utils::test_utils::*};
 
     impl FrequencyDetectorTest for RawFftDetector {
-        fn spectrum(&self) -> Vec<(usize, f64)> {
-            let mut fft_space = FftSpace::new(1024);
-            let signal = (0..1024).map(|x| x as f64);
-            fft_space.init_fft_space(signal);
-            let (space, scratch) = fft_space.workspace();
-            let mut planner = FftPlanner::new();
-            let fft = planner.plan_fft_forward(1024);
-            fft.process_with_scratch(space, scratch);
-            Self::spectrum(&fft_space).into_iter().collect()
+        fn spectrum<'a, I>(&self, signal: I) -> Box<dyn Iterator<Item = (usize, f64)> + 'a>
+        where
+            <I as IntoIterator>::Item: std::borrow::Borrow<f64>,
+            I: IntoIterator + 'a,
+        {
+            let signal_iter = signal.into_iter();
+            let mut fft_space = FftSpace::new(
+                signal_iter
+                    .size_hint()
+                    .1
+                    .expect("Signal length is not known"),
+            );
+            Self::process_fft(signal, &mut fft_space);
+            Self::spectrum(&fft_space)
         }
 
         fn name(&self) -> &'static str {
