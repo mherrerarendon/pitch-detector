@@ -1,8 +1,6 @@
-use crate::{constants::*, fft_space::FftSpace, FrequencyDetector, Partial};
+use crate::{constants::*, fft_space::FftSpace, peak_iter::FftPeaks, FrequencyDetector, Partial};
 use rustfft::FftPlanner;
 use std::borrow::Borrow;
-
-use super::peak_iter::FftPeaks;
 
 pub struct RawFftDetector {
     fft_space: FftSpace,
