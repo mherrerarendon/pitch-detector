@@ -2,6 +2,7 @@ use crate::core::constants::{A4_FREQ, MAX_CENTS_OFFSET, MIN_FREQ, NOTES};
 
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub struct Pitch {
+    pub freq: f64,
     pub note_name: String,
     pub octave: i32,
     pub cents_offset: f64,
@@ -20,6 +21,7 @@ impl TryFrom<f64> for Pitch {
         let steps_from_c5 = steps_from_a4 - 2.0;
         let cents_offset = (steps_from_a4 - steps_from_a4.round()) * 100.0;
         Ok(Self {
+            freq,
             note_name: NOTES[(steps_from_a4.round() as usize) % NOTES.len()].into(),
             octave: (5. + (steps_from_c5 / 12.0).floor()) as i32,
             cents_offset,
@@ -29,5 +31,47 @@ impl TryFrom<f64> for Pitch {
             next_note_name: NOTES[(steps_from_a4.round() as usize + 1) % NOTES.len()].into(),
             in_tune: cents_offset.abs() < MAX_CENTS_OFFSET,
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use anyhow::Result;
+    use float_cmp::ApproxEq;
+    fn test_pitch_from_f64(
+        freq: f64,
+        note_name: &str,
+        octave: i32,
+        cents_offset: f64,
+        previous_note_name: &str,
+        next_note_name: &str,
+        in_tune: bool,
+    ) -> Result<()> {
+        let pitch = Pitch::try_from(freq)?;
+        assert_eq!(pitch.note_name, note_name);
+        assert_eq!(pitch.octave, octave);
+        assert!(
+            pitch.cents_offset.approx_eq(cents_offset, (0.02, 2)),
+            "Expected cents_offset: {}, actual cents_offset: {}",
+            cents_offset,
+            pitch.cents_offset
+        );
+        assert_eq!(pitch.previous_note_name, previous_note_name);
+        assert_eq!(pitch.next_note_name, next_note_name);
+        assert_eq!(pitch.in_tune, in_tune);
+        Ok(())
+    }
+
+    #[test]
+    fn pitch_from_f64_works() -> Result<()> {
+        test_pitch_from_f64(440., "A", 4, 0., "G#", "A#", true)?;
+        test_pitch_from_f64(493.88, "B", 4, 0., "A#", "C", true)?;
+        test_pitch_from_f64(523.25, "C", 5, 0., "B", "C#", true)?;
+        test_pitch_from_f64(880., "A", 5, 0., "G#", "A#", true)?;
+        test_pitch_from_f64(220., "A", 3, 0., "G#", "A#", true)?;
+        test_pitch_from_f64(27.51, "A", 0, 0.629, "G#", "A#", true)?;
+        assert!(test_pitch_from_f64(0., "A", 0, 0., "G#", "A#", true).is_err());
+        Ok(())
     }
 }
