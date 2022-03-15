@@ -64,7 +64,7 @@ impl FrequencyDetector for RawFftDetector {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{tests::FrequencyDetectorTest, utils::test_utils::*};
+    use crate::{utils::test_utils::*, FrequencyDetectorTest};
 
     impl FrequencyDetectorTest for RawFftDetector {
         fn spectrum<'a, I>(&self, signal: I) -> Vec<(usize, f64)>
@@ -91,17 +91,16 @@ mod tests {
     #[test]
     fn test_raw_fft() -> anyhow::Result<()> {
         let mut detector = RawFftDetector;
-        let mut fft_space = FftSpace::new(TEST_FFT_SPACE_SIZE);
 
-        test_fundamental_freq(&mut detector, &mut fft_space, "cello_open_a.json", 219.383)?;
+        test_fundamental_freq(&mut detector, "cello_open_a.json", 219.383)?;
 
         // Fails to detect open d, which should be at around 146 Hz
-        test_fundamental_freq(&mut detector, &mut fft_space, "cello_open_d.json", 293.390)?;
+        test_fundamental_freq(&mut detector, "cello_open_d.json", 293.390)?;
 
-        test_fundamental_freq(&mut detector, &mut fft_space, "cello_open_g.json", 97.209)?;
+        test_fundamental_freq(&mut detector, "cello_open_g.json", 97.209)?;
 
         // Fails to detect open C, which should be around 64 Hz
-        test_fundamental_freq(&mut detector, &mut fft_space, "cello_open_c.json", 129.046)?;
+        test_fundamental_freq(&mut detector, "cello_open_c.json", 129.046)?;
         Ok(())
     }
 }

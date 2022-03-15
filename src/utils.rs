@@ -5,17 +5,6 @@ pub fn audio_buffer_to_samples(byte_buffer: &[u8]) -> Vec<i16> {
         .collect()
 }
 
-pub fn calc_optimized_fft_space_size(num_samples: usize) -> usize {
-    let mut optimized_sum_samples = (2usize).pow(10);
-    loop {
-        if optimized_sum_samples < num_samples {
-            optimized_sum_samples *= 2;
-        } else {
-            break optimized_sum_samples;
-        }
-    }
-}
-
 #[cfg(test)]
 pub mod test_utils {
     pub(crate) fn audio_buffer_to_signal(byte_buffer: &[u8]) -> Vec<f64> {
@@ -27,13 +16,11 @@ pub mod test_utils {
     use float_cmp::ApproxEq;
 
     use super::*;
-    use crate::{fft_space::FftSpace, tests::FrequencyDetectorTest, FrequencyDetector};
-    use plotters::prelude::*;
+    use crate::{fft_space::FftSpace, FrequencyDetector};
     use serde::Deserialize;
     use std::fs;
 
     pub(crate) const TEST_FFT_SPACE_SIZE: usize = 32768;
-    const PLOT: bool = false;
 
     #[derive(Deserialize)]
     pub struct SampleData {
@@ -49,18 +36,14 @@ pub mod test_utils {
 
     pub fn test_fundamental_freq<D: FrequencyDetector>(
         detector: &mut D,
-        fft_space: &mut FftSpace,
+        // fft_space: &mut FftSpace,
         samples_file: &str,
         expected_freq: f64,
     ) -> anyhow::Result<()> {
         let signal = test_signal(samples_file)?;
-        let fft_space_size = calc_optimized_fft_space_size(signal.len());
-
-        // Sanity check
-        assert_eq!(fft_space_size, TEST_FFT_SPACE_SIZE);
 
         let freq = detector
-            .detect_frequency_with_fft_space(&signal, fft_space)
+            .detect_frequency(&signal)
             .ok_or(anyhow::anyhow!("Did not get pitch"))?;
 
         assert!(

@@ -45,6 +45,21 @@ impl FftSpace {
         }
     }
 
+    pub fn new_padded(size: usize) -> Self {
+        let mut padded_size = (2usize).pow(10);
+        padded_size = loop {
+            if padded_size < size {
+                padded_size *= 2;
+            } else {
+                break padded_size;
+            }
+        };
+        FftSpace {
+            space: vec![Complex::zero(); padded_size],
+            scratch: vec![Complex::zero(); padded_size],
+        }
+    }
+
     pub fn map<F: Fn(&Complex<f64>) -> Complex<f64>>(&mut self, map_fn: F) {
         self.space.iter_mut().for_each(|f| {
             *f = map_fn(f);

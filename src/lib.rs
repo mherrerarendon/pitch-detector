@@ -12,7 +12,7 @@ pub trait FrequencyDetector {
         <I as IntoIterator>::Item: std::borrow::Borrow<f64>,
     {
         let signal_iter = signal.into_iter();
-        let mut fft_space = FftSpace::new(
+        let mut fft_space = FftSpace::new_padded(
             signal_iter
                 .size_hint()
                 .1
@@ -44,22 +44,10 @@ impl Default for Partial {
         }
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use anyhow::Result;
-
-    pub(crate) trait FrequencyDetectorTest {
-        fn spectrum<'a, I>(&self, signal: I) -> Vec<(usize, f64)>
-        where
-            <I as IntoIterator>::Item: std::borrow::Borrow<f64>,
-            I: IntoIterator + 'a;
-        fn name(&self) -> &'static str;
-    }
-
-    #[test]
-    fn test_name() -> Result<()> {
-        Ok(())
-    }
+pub(crate) trait FrequencyDetectorTest {
+    fn spectrum<'a, I>(&self, signal: I) -> Vec<(usize, f64)>
+    where
+        <I as IntoIterator>::Item: std::borrow::Borrow<f64>,
+        I: IntoIterator + 'a;
+    fn name(&self) -> &'static str;
 }

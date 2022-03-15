@@ -123,7 +123,7 @@ impl FrequencyDetector for AutocorrelationDetector {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{constants::RAW_FFT_ALGORITHM, tests::FrequencyDetectorTest, utils::test_utils::*};
+    use crate::{constants::RAW_FFT_ALGORITHM, utils::test_utils::*, FrequencyDetectorTest};
 
     impl FrequencyDetectorTest for AutocorrelationDetector {
         fn spectrum<'a, I>(&self, signal: I) -> Vec<(usize, f64)>
@@ -149,13 +149,12 @@ mod tests {
     #[test]
     fn test_autocorrelation() -> anyhow::Result<()> {
         let mut detector = AutocorrelationDetector;
-        let mut fft_space = FftSpace::new(TEST_FFT_SPACE_SIZE);
 
-        test_fundamental_freq(&mut detector, &mut fft_space, "tuner_c5.json", 529.841)?;
-        test_fundamental_freq(&mut detector, &mut fft_space, "cello_open_a.json", 219.634)?;
-        test_fundamental_freq(&mut detector, &mut fft_space, "cello_open_d.json", 146.717)?;
-        test_fundamental_freq(&mut detector, &mut fft_space, "cello_open_g.json", 97.985)?;
-        test_fundamental_freq(&mut detector, &mut fft_space, "cello_open_c.json", 64.535)?;
+        test_fundamental_freq(&mut detector, "tuner_c5.json", 529.841)?;
+        test_fundamental_freq(&mut detector, "cello_open_a.json", 219.634)?;
+        test_fundamental_freq(&mut detector, "cello_open_d.json", 146.717)?;
+        test_fundamental_freq(&mut detector, "cello_open_g.json", 97.985)?;
+        test_fundamental_freq(&mut detector, "cello_open_c.json", 64.535)?;
         Ok(())
     }
 }
