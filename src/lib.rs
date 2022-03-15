@@ -1,10 +1,11 @@
 mod core;
 pub mod detectors;
+pub mod pitch;
 
 use crate::core::fft_space::FftSpace;
 
 pub trait FrequencyDetector {
-    fn detect_frequency<I: IntoIterator>(&mut self, signal: I) -> Option<f64>
+    fn detect_frequency<I: IntoIterator>(&mut self, signal: I, sample_rate: f64) -> Option<f64>
     where
         <I as IntoIterator>::Item: std::borrow::Borrow<f64>,
     {
@@ -15,12 +16,13 @@ pub trait FrequencyDetector {
                 .1
                 .expect("Signal length is not known"),
         );
-        self.detect_frequency_with_fft_space(signal_iter, &mut fft_space)
+        self.detect_frequency_with_fft_space(signal_iter, sample_rate, &mut fft_space)
     }
 
     fn detect_frequency_with_fft_space<I: IntoIterator>(
         &mut self,
         signal: I,
+        sample_rate: f64,
         fft_space: &mut FftSpace,
     ) -> Option<f64>
     where
@@ -42,7 +44,7 @@ impl Default for Partial {
     }
 }
 pub trait FrequencyDetectorTest {
-    fn spectrum<'a, I>(&self, signal: I) -> Vec<(usize, f64)>
+    fn spectrum<'a, I>(&self, signal: I, sample_rate: f64) -> Vec<(usize, f64)>
     where
         <I as IntoIterator>::Item: std::borrow::Borrow<f64>,
         I: IntoIterator + 'a;

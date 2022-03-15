@@ -1,6 +1,6 @@
 use crate::{
     core::{
-        constants::{MAX_FREQ, MIN_FREQ, SAMPLE_RATE},
+        constants::{MAX_FREQ, MIN_FREQ},
         fft_space::FftSpace,
         peak_iter::FftPeaks,
     },
@@ -12,9 +12,12 @@ use std::borrow::Borrow;
 pub struct RawFftDetector;
 
 impl RawFftDetector {
-    fn spectrum(fft_space: &FftSpace) -> Box<dyn Iterator<Item = (usize, f64)> + '_> {
-        let lower_limit = (MIN_FREQ * fft_space.len() as f64 / SAMPLE_RATE).round() as usize;
-        let upper_limit = (MAX_FREQ * fft_space.len() as f64 / SAMPLE_RATE).round() as usize;
+    fn spectrum(
+        fft_space: &FftSpace,
+        sample_rate: f64,
+    ) -> Box<dyn Iterator<Item = (usize, f64)> + '_> {
+        let lower_limit = (MIN_FREQ * fft_space.len() as f64 / sample_rate).round() as usize;
+        let upper_limit = (MAX_FREQ * fft_space.len() as f64 / sample_rate).round() as usize;
         Box::new(
             fft_space
                 .freq_domain(true)
@@ -51,18 +54,19 @@ impl FrequencyDetector for RawFftDetector {
     fn detect_frequency_with_fft_space<I: IntoIterator>(
         &mut self,
         signal: I,
+        sample_rate: f64,
         fft_space: &mut FftSpace,
     ) -> Option<f64>
     where
         <I as IntoIterator>::Item: std::borrow::Borrow<f64>,
     {
         Self::process_fft(signal, fft_space);
-        Self::spectrum(fft_space)
+        Self::spectrum(fft_space, sample_rate)
             .into_iter()
             .fft_peaks(40, 10.)
             .reduce(|accum, item| if item.1 > accum.1 { item } else { accum })
             .map(|item| Partial {
-                freq: item.0 * SAMPLE_RATE / fft_space.len() as f64,
+                freq: item.0 * sample_rate / fft_space.len() as f64,
                 intensity: item.1,
             })
             .map(|partial| partial.freq)
@@ -78,7 +82,7 @@ mod tests {
     };
 
     impl FrequencyDetectorTest for RawFftDetector {
-        fn spectrum<'a, I>(&self, signal: I) -> Vec<(usize, f64)>
+        fn spectrum<'a, I>(&self, signal: I, sample_rate: f64) -> Vec<(usize, f64)>
         where
             <I as IntoIterator>::Item: std::borrow::Borrow<f64>,
             I: IntoIterator + 'a,
@@ -91,7 +95,7 @@ mod tests {
                     .expect("Signal length is not known"),
             );
             Self::process_fft(signal_iter, &mut fft_space);
-            Self::spectrum(&fft_space).collect()
+            Self::spectrum(&fft_space, sample_rate).collect()
         }
 
         fn name(&self) -> &'static str {

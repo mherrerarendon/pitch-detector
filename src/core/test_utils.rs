@@ -33,10 +33,11 @@ pub fn test_fundamental_freq<D: FrequencyDetector>(
     samples_file: &str,
     expected_freq: f64,
 ) -> anyhow::Result<()> {
+    pub const TEST_SAMPLE_RATE: f64 = 44000.0;
     let signal = test_signal(samples_file)?;
 
     let freq = detector
-        .detect_frequency(&signal)
+        .detect_frequency(&signal, TEST_SAMPLE_RATE)
         .ok_or(anyhow::anyhow!("Did not get pitch"))?;
 
     assert!(

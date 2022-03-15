@@ -1,5 +1,5 @@
 use crate::{
-    core::constants::{MAX_FREQ, MIN_FREQ, SAMPLE_RATE},
+    core::constants::{MAX_FREQ, MIN_FREQ},
     core::fft_space::FftSpace,
     FrequencyDetector, Partial,
 };
@@ -48,7 +48,7 @@ where
         // mu, sigma, a
         if let Ok((mu, _, amplitude)) = fit(x_vals.into(), y_vals.into()) {
             Some(Partial {
-                freq: SAMPLE_RATE / mu,
+                freq: mu,
                 intensity: amplitude,
             })
         } else {
@@ -60,12 +60,15 @@ where
 pub struct AutocorrelationDetector;
 
 impl AutocorrelationDetector {
-    fn spectrum(fft_space: &FftSpace) -> Box<dyn Iterator<Item = (usize, f64)> + '_> {
+    fn spectrum(
+        fft_space: &FftSpace,
+        sample_rate: f64,
+    ) -> Box<dyn Iterator<Item = (usize, f64)> + '_> {
         // Frequency = SAMPLE_RATE / quefrency
         // With this in mind we can ignore the extremes of the power cepstrum
         // https://en.wikipedia.org/wiki/Cepstrum
-        let lower_limit = (SAMPLE_RATE / MAX_FREQ).round() as usize;
-        let upper_limit = (SAMPLE_RATE / MIN_FREQ).round() as usize;
+        let lower_limit = (sample_rate / MAX_FREQ).round() as usize;
+        let upper_limit = (sample_rate / MIN_FREQ).round() as usize;
         Box::new(
             fft_space
                 .space()
@@ -99,13 +102,14 @@ impl FrequencyDetector for AutocorrelationDetector {
     fn detect_frequency_with_fft_space<I: IntoIterator>(
         &mut self,
         signal: I,
+        sample_rate: f64,
         fft_space: &mut FftSpace,
     ) -> Option<f64>
     where
         <I as IntoIterator>::Item: std::borrow::Borrow<f64>,
     {
         Self::process_fft(signal, fft_space);
-        Self::spectrum(fft_space)
+        Self::spectrum(fft_space, sample_rate)
             .into_iter()
             .skip_while(|(_, intensity)| *intensity > 0.001) // Skip the first slide
             .autocorrelation_peaks()
@@ -116,7 +120,7 @@ impl FrequencyDetector for AutocorrelationDetector {
                     accum
                 }
             })
-            .map(|partial| partial.freq)
+            .map(|partial| sample_rate / partial.freq)
     }
 }
 
@@ -129,7 +133,7 @@ mod tests {
     };
 
     impl FrequencyDetectorTest for AutocorrelationDetector {
-        fn spectrum<'a, I>(&self, signal: I) -> Vec<(usize, f64)>
+        fn spectrum<'a, I>(&self, signal: I, sample_rate: f64) -> Vec<(usize, f64)>
         where
             <I as IntoIterator>::Item: std::borrow::Borrow<f64>,
             I: IntoIterator + 'a,
@@ -142,7 +146,7 @@ mod tests {
                     .expect("Signal length is not known"),
             );
             Self::process_fft(signal_iter, &mut fft_space);
-            Self::spectrum(&fft_space).collect()
+            Self::spectrum(&fft_space, sample_rate).collect()
         }
 
         fn name(&self) -> &'static str {
