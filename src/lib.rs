@@ -51,7 +51,7 @@ mod tests {
     use anyhow::Result;
 
     pub(crate) trait FrequencyDetectorTest {
-        fn spectrum<'a, I>(&self, signal: I) -> Box<dyn Iterator<Item = (usize, f64)> + 'a>
+        fn spectrum<'a, I>(&self, signal: I) -> Vec<(usize, f64)>
         where
             <I as IntoIterator>::Item: std::borrow::Borrow<f64>,
             I: IntoIterator + 'a;
