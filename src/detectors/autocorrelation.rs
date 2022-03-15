@@ -111,7 +111,7 @@ impl FrequencyDetector for AutocorrelationDetector {
         Self::process_fft(signal, fft_space);
         Self::spectrum(fft_space, sample_rate)
             .into_iter()
-            .skip_while(|(_, intensity)| *intensity > 0.001) // Skip the first slide
+            .skip_while(|(_, intensity)| *intensity > 0.001) // Skip the first slide down
             .autocorrelation_peaks()
             .reduce(|accum, partial| {
                 if partial.intensity > accum.intensity {
