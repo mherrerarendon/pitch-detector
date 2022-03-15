@@ -1,10 +1,7 @@
-mod constants;
-mod detectors;
-mod fft_space;
-mod peak_iter;
-mod utils;
+mod core;
+pub mod detectors;
 
-use fft_space::FftSpace;
+use crate::core::fft_space::FftSpace;
 
 pub trait FrequencyDetector {
     fn detect_frequency<I: IntoIterator>(&mut self, signal: I) -> Option<f64>
@@ -44,7 +41,7 @@ impl Default for Partial {
         }
     }
 }
-pub(crate) trait FrequencyDetectorTest {
+pub trait FrequencyDetectorTest {
     fn spectrum<'a, I>(&self, signal: I) -> Vec<(usize, f64)>
     where
         <I as IntoIterator>::Item: std::borrow::Borrow<f64>,

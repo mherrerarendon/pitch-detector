@@ -1,6 +1,6 @@
 use crate::{
-    constants::{AUTOCORRELATION_ALGORITHM, MAX_FREQ, MIN_FREQ, SAMPLE_RATE},
-    fft_space::FftSpace,
+    core::constants::{MAX_FREQ, MIN_FREQ, SAMPLE_RATE},
+    core::fft_space::FftSpace,
     FrequencyDetector, Partial,
 };
 use fitting::gaussian::fit;
@@ -123,7 +123,10 @@ impl FrequencyDetector for AutocorrelationDetector {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{constants::RAW_FFT_ALGORITHM, utils::test_utils::*, FrequencyDetectorTest};
+    use crate::{
+        core::{constants::tests::AUTOCORRELATION_ALGORITHM, test_utils::test_fundamental_freq},
+        FrequencyDetectorTest,
+    };
 
     impl FrequencyDetectorTest for AutocorrelationDetector {
         fn spectrum<'a, I>(&self, signal: I) -> Vec<(usize, f64)>

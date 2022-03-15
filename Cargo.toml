@@ -9,10 +9,6 @@ edition = "2021"
 name = "freq_detector"
 path = "src/lib.rs"
 
-[[bin]]
-name = "freq_plots"
-path = "src/main.rs"
-
 [dependencies]
 anyhow = "1.0.52"
 enum_dispatch = "0.3.7"

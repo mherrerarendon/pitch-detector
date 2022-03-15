@@ -1,20 +1,28 @@
-use crate::{constants::*, fft_space::FftSpace, peak_iter::FftPeaks, FrequencyDetector, Partial};
+use crate::{
+    core::{
+        constants::{MAX_FREQ, MIN_FREQ, SAMPLE_RATE},
+        fft_space::FftSpace,
+        peak_iter::FftPeaks,
+    },
+    FrequencyDetector, Partial,
+};
 use rustfft::FftPlanner;
 use std::borrow::Borrow;
 
 pub struct RawFftDetector;
 
 impl RawFftDetector {
-    fn spectrum(fft_space: &FftSpace) -> Vec<(usize, f64)> {
+    fn spectrum(fft_space: &FftSpace) -> Box<dyn Iterator<Item = (usize, f64)> + '_> {
         let lower_limit = (MIN_FREQ * fft_space.len() as f64 / SAMPLE_RATE).round() as usize;
         let upper_limit = (MAX_FREQ * fft_space.len() as f64 / SAMPLE_RATE).round() as usize;
-        fft_space
-            .freq_domain(true)
-            .enumerate()
-            .skip(lower_limit)
-            .take(upper_limit - lower_limit)
-            .map(|(i, (amplitude, _))| (i, amplitude))
-            .collect()
+        Box::new(
+            fft_space
+                .freq_domain(true)
+                .enumerate()
+                .skip(lower_limit)
+                .take(upper_limit - lower_limit)
+                .map(|(i, (amplitude, _))| (i, amplitude)),
+        )
     }
 
     fn process_fft<I: IntoIterator>(signal: I, fft_space: &mut FftSpace)
@@ -64,7 +72,10 @@ impl FrequencyDetector for RawFftDetector {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{utils::test_utils::*, FrequencyDetectorTest};
+    use crate::{
+        core::{constants::tests::RAW_FFT_ALGORITHM, test_utils::test_fundamental_freq},
+        FrequencyDetectorTest,
+    };
 
     impl FrequencyDetectorTest for RawFftDetector {
         fn spectrum<'a, I>(&self, signal: I) -> Vec<(usize, f64)>
@@ -80,7 +91,7 @@ mod tests {
                     .expect("Signal length is not known"),
             );
             Self::process_fft(signal_iter, &mut fft_space);
-            Self::spectrum(&fft_space)
+            Self::spectrum(&fft_space).collect()
         }
 
         fn name(&self) -> &'static str {

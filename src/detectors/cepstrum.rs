@@ -1,4 +1,11 @@
-use crate::{constants::*, fft_space::FftSpace, peak_iter::FftPeaks, FrequencyDetector, Partial};
+use crate::{
+    core::{
+        constants::{MAX_FREQ, MIN_FREQ, SAMPLE_RATE},
+        fft_space::FftSpace,
+        peak_iter::FftPeaks,
+    },
+    FrequencyDetector, Partial,
+};
 use rustfft::{num_complex::Complex, FftPlanner};
 
 pub struct PowerCepstrum;
@@ -67,7 +74,10 @@ impl FrequencyDetector for PowerCepstrum {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{utils::test_utils::*, FrequencyDetectorTest};
+    use crate::{
+        core::{constants::tests::POWER_CEPSTRUM_ALGORITHM, test_utils::test_fundamental_freq},
+        FrequencyDetectorTest,
+    };
 
     impl FrequencyDetectorTest for PowerCepstrum {
         fn spectrum<'a, I>(&self, signal: I) -> Vec<(usize, f64)>
