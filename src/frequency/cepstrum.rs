@@ -45,6 +45,7 @@ impl PowerCepstrum {
         inverse_fft.process_with_scratch(space, scratch);
     }
 }
+
 impl FrequencyDetector for PowerCepstrum {
     fn detect_frequency_with_fft_space<I: IntoIterator>(
         &mut self,
@@ -74,16 +75,14 @@ impl FrequencyDetector for PowerCepstrum {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+#[cfg(feature = "test_utils")]
+mod test_utils {
     use crate::{
-        core::{
-            constants::tests::POWER_CEPSTRUM_ALGORITHM,
-            test_utils::{test_fundamental_freq, test_sine_wave},
-        },
+        core::{constants::test_utils::POWER_CEPSTRUM_ALGORITHM, fft_space::FftSpace},
         frequency::FrequencyDetectorTest,
     };
+
+    use super::PowerCepstrum;
 
     impl FrequencyDetectorTest for PowerCepstrum {
         fn spectrum<'a, I>(&self, signal: I, sample_rate: f64) -> Vec<(usize, f64)>
@@ -106,6 +105,12 @@ mod tests {
             POWER_CEPSTRUM_ALGORITHM
         }
     }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::core::test_utils::{test_fundamental_freq, test_sine_wave};
 
     #[test]
     fn test_power() -> anyhow::Result<()> {

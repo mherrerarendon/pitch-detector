@@ -72,16 +72,14 @@ impl FrequencyDetector for RawFftDetector {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+#[cfg(feature = "test_utils")]
+mod test_utils {
     use crate::{
-        core::{
-            constants::tests::RAW_FFT_ALGORITHM,
-            test_utils::{test_fundamental_freq, test_sine_wave},
-        },
+        core::{constants::test_utils::RAW_FFT_ALGORITHM, fft_space::FftSpace},
         frequency::FrequencyDetectorTest,
     };
+
+    use super::RawFftDetector;
 
     impl FrequencyDetectorTest for RawFftDetector {
         fn spectrum<'a, I>(&self, signal: I, sample_rate: f64) -> Vec<(usize, f64)>
@@ -104,6 +102,12 @@ mod tests {
             RAW_FFT_ALGORITHM
         }
     }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::core::test_utils::{test_fundamental_freq, test_sine_wave};
 
     #[test]
     fn test_raw_fft() -> anyhow::Result<()> {

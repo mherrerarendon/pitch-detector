@@ -45,6 +45,8 @@ impl Default for Partial {
         }
     }
 }
+
+#[cfg(feature = "test_utils")]
 pub trait FrequencyDetectorTest {
     fn spectrum<'a, I>(&self, signal: I, sample_rate: f64) -> Vec<(usize, f64)>
     where
