@@ -5,7 +5,7 @@ use crate::{
 use fitting::gaussian::fit;
 use rustfft::FftPlanner;
 
-use super::{FrequencyDetector, Partial};
+use super::{FftPoint, FrequencyDetector};
 
 struct AutocorrelationPeakIter<I: Iterator<Item = (usize, f64)>> {
     signal: I,
@@ -31,7 +31,7 @@ impl<I> Iterator for AutocorrelationPeakIter<I>
 where
     I: Iterator<Item = (usize, f64)>,
 {
-    type Item = Partial;
+    type Item = FftPoint;
 
     fn next(&mut self) -> Option<Self::Item> {
         let (x_vals, y_vals): (Vec<f64>, Vec<f64>) = self
@@ -48,9 +48,9 @@ where
 
         // mu, sigma, a
         if let Ok((mu, _, amplitude)) = fit(x_vals.into(), y_vals.into()) {
-            Some(Partial {
-                freq: mu,
-                intensity: amplitude,
+            Some(FftPoint {
+                x: mu,
+                y: amplitude,
             })
         } else {
             None
@@ -97,6 +97,22 @@ impl AutocorrelationDetector {
         let inverse_fft = planner.plan_fft_inverse(space.len());
         inverse_fft.process_with_scratch(space, scratch);
     }
+
+    fn detect_unscaled_freq<I: IntoIterator>(
+        signal: I,
+        sample_rate: f64,
+        fft_space: &mut FftSpace,
+    ) -> Option<FftPoint>
+    where
+        <I as IntoIterator>::Item: std::borrow::Borrow<f64>,
+    {
+        Self::process_fft(signal, fft_space);
+        Self::spectrum(fft_space, sample_rate)
+            .into_iter()
+            .skip_while(|(_, intensity)| *intensity > 0.001) // Skip the first slide down
+            .autocorrelation_peaks()
+            .reduce(|accum, point| if point.y > accum.y { point } else { accum })
+    }
 }
 
 impl FrequencyDetector for AutocorrelationDetector {
@@ -109,19 +125,8 @@ impl FrequencyDetector for AutocorrelationDetector {
     where
         <I as IntoIterator>::Item: std::borrow::Borrow<f64>,
     {
-        Self::process_fft(signal, fft_space);
-        Self::spectrum(fft_space, sample_rate)
-            .into_iter()
-            .skip_while(|(_, intensity)| *intensity > 0.001) // Skip the first slide down
-            .autocorrelation_peaks()
-            .reduce(|accum, partial| {
-                if partial.intensity > accum.intensity {
-                    partial
-                } else {
-                    accum
-                }
-            })
-            .map(|partial| sample_rate / partial.freq)
+        Self::detect_unscaled_freq(signal, sample_rate, fft_space)
+            .map(|partial| sample_rate / partial.x)
     }
 }
 
@@ -129,7 +134,7 @@ impl FrequencyDetector for AutocorrelationDetector {
 mod test_utils {
     use crate::{
         core::{constants::test_utils::AUTOCORRELATION_ALGORITHM, fft_space::FftSpace},
-        frequency::FrequencyDetectorTest,
+        frequency::{FftPoint, FrequencyDetectorTest},
     };
 
     use super::AutocorrelationDetector;
@@ -149,6 +154,18 @@ mod test_utils {
             );
             Self::process_fft(signal_iter, &mut fft_space);
             Self::spectrum(&fft_space, sample_rate).collect()
+        }
+
+        fn detect_unscaled_freq<I: IntoIterator>(
+            &mut self,
+            signal: I,
+            sample_rate: f64,
+            fft_space: &mut FftSpace,
+        ) -> Option<FftPoint>
+        where
+            <I as IntoIterator>::Item: std::borrow::Borrow<f64>,
+        {
+            Self::detect_unscaled_freq(signal, sample_rate, fft_space)
         }
 
         fn name(&self) -> &'static str {

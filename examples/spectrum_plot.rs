@@ -6,23 +6,23 @@ use freq_detector::{
 };
 use plotters::prelude::*;
 
-fn plot<D: FrequencyDetector + FrequencyDetectorTest>(
-    detector: &D,
-    samples_file: &str,
-    expected_freq: f64,
-) -> anyhow::Result<()> {
+fn plot<D, I>(detector: &D, signal: I, plot_name: &str, expected_freq: f64) -> anyhow::Result<()>
+where
+    I: IntoIterator,
+    <I as IntoIterator>::Item: std::borrow::Borrow<f64>,
+    D: FrequencyDetector + FrequencyDetectorTest,
+{
     let plot_title = format!(
         "{} - {} - {:?} Hz",
         detector.name(),
-        samples_file,
+        plot_name,
         expected_freq
     );
     let output_file = format!(
         "{}/test_data/results/{}.png",
         env!("CARGO_MANIFEST_DIR"),
-        format!("{} - {}", detector.name(), samples_file)
+        format!("{} - {}", detector.name(), plot_name)
     );
-    let signal = test_signal(samples_file)?;
     let (x_vals, y_vals): (Vec<f64>, Vec<f64>) = detector
         .spectrum(signal, 44000.)
         .iter()
@@ -55,7 +55,19 @@ fn plot<D: FrequencyDetector + FrequencyDetectorTest>(
     Ok(())
 }
 fn main() -> anyhow::Result<()> {
+    let test_files = [
+        "cello_open_a.json",
+        "cello_open_c.json",
+        "cello_open_g.json",
+        "cello_open_c.json",
+        "tuner_c5.json",
+    ];
     let mut detector = AutocorrelationDetector;
-    plot(&mut detector, "tuner_c5.json", 523.)?;
+    plot(
+        &mut detector,
+        test_signal("tuner_c5.json")?,
+        "tuner_c5",
+        523.,
+    )?;
     Ok(())
 }

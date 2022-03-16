@@ -32,17 +32,14 @@ pub trait FrequencyDetector {
 }
 
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
-pub struct Partial {
-    pub freq: f64,
-    pub intensity: f64,
+pub struct FftPoint {
+    pub x: f64,
+    pub y: f64,
 }
 
-impl Default for Partial {
+impl Default for FftPoint {
     fn default() -> Self {
-        Self {
-            freq: 0.0,
-            intensity: 0.0,
-        }
+        Self { x: 0.0, y: 0.0 }
     }
 }
 
@@ -52,5 +49,13 @@ pub trait FrequencyDetectorTest {
     where
         <I as IntoIterator>::Item: std::borrow::Borrow<f64>,
         I: IntoIterator + 'a;
+    fn detect_unscaled_freq<I: IntoIterator>(
+        &mut self,
+        signal: I,
+        sample_rate: f64,
+        fft_space: &mut FftSpace,
+    ) -> Option<FftPoint>
+    where
+        <I as IntoIterator>::Item: std::borrow::Borrow<f64>;
     fn name(&self) -> &'static str;
 }

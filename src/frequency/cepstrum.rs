@@ -5,7 +5,7 @@ use crate::core::{
 };
 use rustfft::{num_complex::Complex, FftPlanner};
 
-use super::{FrequencyDetector, Partial};
+use super::{FftPoint, FrequencyDetector};
 
 pub struct PowerCepstrum;
 impl PowerCepstrum {
@@ -44,15 +44,12 @@ impl PowerCepstrum {
         let inverse_fft = planner.plan_fft_inverse(space.len());
         inverse_fft.process_with_scratch(space, scratch);
     }
-}
 
-impl FrequencyDetector for PowerCepstrum {
-    fn detect_frequency_with_fft_space<I: IntoIterator>(
-        &mut self,
+    fn detect_unscaled_freq<I: IntoIterator>(
         signal: I,
         sample_rate: f64,
         fft_space: &mut FftSpace,
-    ) -> Option<f64>
+    ) -> Option<FftPoint>
     where
         <I as IntoIterator>::Item: std::borrow::Borrow<f64>,
     {
@@ -67,11 +64,25 @@ impl FrequencyDetector for PowerCepstrum {
                     accum
                 }
             })
-            .map(|(mu, amplitude)| Partial {
-                freq: sample_rate / mu,
-                intensity: amplitude,
+            .map(|(mu, amplitude)| FftPoint {
+                x: mu,
+                y: amplitude,
             })
-            .map(|partial| partial.freq)
+    }
+}
+
+impl FrequencyDetector for PowerCepstrum {
+    fn detect_frequency_with_fft_space<I: IntoIterator>(
+        &mut self,
+        signal: I,
+        sample_rate: f64,
+        fft_space: &mut FftSpace,
+    ) -> Option<f64>
+    where
+        <I as IntoIterator>::Item: std::borrow::Borrow<f64>,
+    {
+        Self::detect_unscaled_freq(signal, sample_rate, fft_space)
+            .map(|point| sample_rate / point.x)
     }
 }
 
@@ -79,7 +90,7 @@ impl FrequencyDetector for PowerCepstrum {
 mod test_utils {
     use crate::{
         core::{constants::test_utils::POWER_CEPSTRUM_ALGORITHM, fft_space::FftSpace},
-        frequency::FrequencyDetectorTest,
+        frequency::{FftPoint, FrequencyDetectorTest},
     };
 
     use super::PowerCepstrum;
@@ -99,6 +110,18 @@ mod test_utils {
             );
             Self::process_fft(signal_iter, &mut fft_space);
             Self::spectrum(&fft_space, sample_rate).collect()
+        }
+
+        fn detect_unscaled_freq<I: IntoIterator>(
+            &mut self,
+            signal: I,
+            sample_rate: f64,
+            fft_space: &mut FftSpace,
+        ) -> Option<FftPoint>
+        where
+            <I as IntoIterator>::Item: std::borrow::Borrow<f64>,
+        {
+            Self::detect_unscaled_freq(signal, sample_rate, fft_space)
         }
 
         fn name(&self) -> &'static str {
