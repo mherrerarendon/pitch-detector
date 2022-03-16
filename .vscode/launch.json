@@ -1,0 +1,102 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'freq_detector'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=freq-detector"
+                ],
+                "filter": {
+                    "name": "freq_detector",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "spectrum_plot",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=spectrum_plot",
+                    "--package=freq-detector",
+                    "--features=test_utils"
+                ],
+                "filter": {
+                    "name": "spectrum_plot",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in example 'spectrum_plot'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--example=spectrum_plot",
+                    "--package=freq-detector"
+                ],
+                "filter": {
+                    "name": "spectrum_plot",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug example 'basic_usage'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=basic_usage",
+                    "--package=freq-detector"
+                ],
+                "filter": {
+                    "name": "basic_usage",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in example 'basic_usage'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--example=basic_usage",
+                    "--package=freq-detector"
+                ],
+                "filter": {
+                    "name": "basic_usage",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}

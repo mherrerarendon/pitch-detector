@@ -12,6 +12,10 @@ path = "src/lib.rs"
 [features]
 test_utils = ["serde", "serde_json"]
 
+[[example]]
+name = "spectrum_plot"
+required-features = ["test_utils"]
+
 [dependencies]
 anyhow = "1.0.52"
 enum_dispatch = "0.3.7"
@@ -27,4 +31,5 @@ serde = {version = "1.0.133", features = ["derive"], optional = true}
 [dev-dependencies]
 serde_json = "1.0.74"
 serde = {version = "1.0.133", features = ["derive"]}
+plotters = "0.3.1"
 
