@@ -1,10 +1,11 @@
 use crate::{
     core::constants::{MAX_FREQ, MIN_FREQ},
     core::fft_space::FftSpace,
-    FrequencyDetector, Partial,
 };
 use fitting::gaussian::fit;
 use rustfft::FftPlanner;
+
+use super::{FrequencyDetector, Partial};
 
 struct AutocorrelationPeakIter<I: Iterator<Item = (usize, f64)>> {
     signal: I,
@@ -128,8 +129,11 @@ impl FrequencyDetector for AutocorrelationDetector {
 mod tests {
     use super::*;
     use crate::{
-        core::{constants::tests::AUTOCORRELATION_ALGORITHM, test_utils::test_fundamental_freq},
-        FrequencyDetectorTest,
+        core::{
+            constants::tests::AUTOCORRELATION_ALGORITHM,
+            test_utils::{test_fundamental_freq, test_sine_wave},
+        },
+        frequency::FrequencyDetectorTest,
     };
 
     impl FrequencyDetectorTest for AutocorrelationDetector {
@@ -162,6 +166,13 @@ mod tests {
         test_fundamental_freq(&mut detector, "cello_open_d.json", 146.717)?;
         test_fundamental_freq(&mut detector, "cello_open_g.json", 97.985)?;
         test_fundamental_freq(&mut detector, "cello_open_c.json", 64.535)?;
+        Ok(())
+    }
+
+    #[test]
+    fn test_raw_fft_sine() -> anyhow::Result<()> {
+        let mut detector = AutocorrelationDetector;
+        test_sine_wave(&mut detector, 440.)?;
         Ok(())
     }
 }

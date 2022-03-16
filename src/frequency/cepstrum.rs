@@ -1,12 +1,11 @@
-use crate::{
-    core::{
-        constants::{MAX_FREQ, MIN_FREQ},
-        fft_space::FftSpace,
-        peak_iter::FftPeaks,
-    },
-    FrequencyDetector, Partial,
+use crate::core::{
+    constants::{MAX_FREQ, MIN_FREQ},
+    fft_space::FftSpace,
+    peak_iter::FftPeaks,
 };
 use rustfft::{num_complex::Complex, FftPlanner};
+
+use super::{FrequencyDetector, Partial};
 
 pub struct PowerCepstrum;
 impl PowerCepstrum {
@@ -79,8 +78,11 @@ impl FrequencyDetector for PowerCepstrum {
 mod tests {
     use super::*;
     use crate::{
-        core::{constants::tests::POWER_CEPSTRUM_ALGORITHM, test_utils::test_fundamental_freq},
-        FrequencyDetectorTest,
+        core::{
+            constants::tests::POWER_CEPSTRUM_ALGORITHM,
+            test_utils::{test_fundamental_freq, test_sine_wave},
+        },
+        frequency::FrequencyDetectorTest,
     };
 
     impl FrequencyDetectorTest for PowerCepstrum {
@@ -116,6 +118,13 @@ mod tests {
         test_fundamental_freq(&mut detector, "cello_open_d.json", 146.730)?;
         test_fundamental_freq(&mut detector, "cello_open_g.json", 97.214)?;
         test_fundamental_freq(&mut detector, "cello_open_c.json", 64.454)?;
+        Ok(())
+    }
+
+    #[test]
+    fn test_raw_fft_sine() -> anyhow::Result<()> {
+        let mut detector = PowerCepstrum;
+        test_sine_wave(&mut detector, 440.)?;
         Ok(())
     }
 }

@@ -1,13 +1,12 @@
-use crate::{
-    core::{
-        constants::{MAX_FREQ, MIN_FREQ},
-        fft_space::FftSpace,
-        peak_iter::FftPeaks,
-    },
-    FrequencyDetector, Partial,
+use crate::core::{
+    constants::{MAX_FREQ, MIN_FREQ},
+    fft_space::FftSpace,
+    peak_iter::FftPeaks,
 };
 use rustfft::FftPlanner;
 use std::borrow::Borrow;
+
+use super::{FrequencyDetector, Partial};
 
 pub struct RawFftDetector;
 
@@ -77,8 +76,11 @@ impl FrequencyDetector for RawFftDetector {
 mod tests {
     use super::*;
     use crate::{
-        core::{constants::tests::RAW_FFT_ALGORITHM, test_utils::test_fundamental_freq},
-        FrequencyDetectorTest,
+        core::{
+            constants::tests::RAW_FFT_ALGORITHM,
+            test_utils::{test_fundamental_freq, test_sine_wave},
+        },
+        frequency::FrequencyDetectorTest,
     };
 
     impl FrequencyDetectorTest for RawFftDetector {
@@ -116,6 +118,13 @@ mod tests {
 
         // Fails to detect open C, which should be around 64 Hz
         test_fundamental_freq(&mut detector, "cello_open_c.json", 129.046)?;
+        Ok(())
+    }
+
+    #[test]
+    fn test_raw_fft_sine() -> anyhow::Result<()> {
+        let mut detector = RawFftDetector;
+        test_sine_wave(&mut detector, 440.)?;
         Ok(())
     }
 }

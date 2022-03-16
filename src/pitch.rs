@@ -1,4 +1,10 @@
-use crate::core::constants::{A4_FREQ, MAX_CENTS_OFFSET, MIN_FREQ, NOTES};
+use crate::{
+    core::{
+        constants::{A4_FREQ, MAX_CENTS_OFFSET, MIN_FREQ, NOTES},
+        fft_space::FftSpace,
+    },
+    frequency::FrequencyDetector,
+};
 
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub struct Pitch {
@@ -32,6 +38,33 @@ impl TryFrom<f64> for Pitch {
             in_tune: cents_offset.abs() < MAX_CENTS_OFFSET,
         })
     }
+}
+
+pub fn detect_frequency<I, D>(signal: I, freq_detector: &mut D, sample_rate: f64) -> Option<Pitch>
+where
+    I: IntoIterator,
+    <I as IntoIterator>::Item: std::borrow::Borrow<f64>,
+    D: FrequencyDetector,
+{
+    freq_detector
+        .detect_frequency(signal, sample_rate)
+        .and_then(|f| f.try_into().ok())
+}
+
+pub fn detect_frequency_with_fft_space<I, D>(
+    signal: I,
+    freq_detector: &mut D,
+    sample_rate: f64,
+    fft_space: &mut FftSpace,
+) -> Option<Pitch>
+where
+    I: IntoIterator,
+    <I as IntoIterator>::Item: std::borrow::Borrow<f64>,
+    D: FrequencyDetector,
+{
+    freq_detector
+        .detect_frequency_with_fft_space(signal, sample_rate, fft_space)
+        .and_then(|f| f.try_into().ok())
 }
 
 #[cfg(test)]

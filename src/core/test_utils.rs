@@ -12,9 +12,10 @@ pub(crate) fn audio_buffer_to_signal(byte_buffer: &[u8]) -> Vec<f64> {
 }
 use float_cmp::ApproxEq;
 
-use crate::FrequencyDetector;
 use serde::Deserialize;
 use std::fs;
+
+use crate::{core::utils::sine_wave_signal, frequency::FrequencyDetector};
 
 #[derive(Deserialize)]
 pub struct SampleData {
@@ -45,6 +46,23 @@ pub fn test_fundamental_freq<D: FrequencyDetector>(
         "Expected freq: {}, Actual freq: {}",
         expected_freq,
         freq
+    );
+    Ok(())
+}
+
+pub fn test_sine_wave<D: FrequencyDetector>(detector: &mut D, freq: f64) -> anyhow::Result<()> {
+    const SAMPLE_RATE: f64 = 44100.0;
+    let signal = sine_wave_signal(8192, 440., SAMPLE_RATE);
+
+    let actual_freq = detector
+        .detect_frequency(&signal, SAMPLE_RATE)
+        .ok_or(anyhow::anyhow!("Did not get pitch"))?;
+
+    assert!(
+        actual_freq.approx_eq(freq, (0.1, 1)),
+        "Expected freq: {}, Actual freq: {}",
+        freq,
+        actual_freq
     );
     Ok(())
 }
