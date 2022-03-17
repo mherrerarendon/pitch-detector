@@ -1,7 +1,8 @@
 use freq_detector::{
     core::test_utils::test_signal,
     frequency::{
-        autocorrelation::AutocorrelationDetector, FrequencyDetector, FrequencyDetectorTest,
+        autocorrelation::AutocorrelationDetector, cepstrum::PowerCepstrum, raw_fft::RawFftDetector,
+        FrequencyDetector, FrequencyDetectorTest,
     },
 };
 use plotters::prelude::*;
@@ -54,6 +55,21 @@ where
     root.present()?;
     Ok(())
 }
+
+fn plot_detector_for_files<D: FrequencyDetector + FrequencyDetectorTest>(
+    mut detector: D,
+    test_files: &[&str],
+) -> anyhow::Result<()> {
+    const TEST_FILE_SAMPLE_RATE: f64 = 44000.;
+    for test_file in test_files {
+        let test_signal = test_signal(test_file)?;
+        let fft_point = detector
+            .detect_unscaled_freq(&test_signal, TEST_FILE_SAMPLE_RATE)
+            .ok_or(anyhow::anyhow!(""))?;
+        plot(&detector, test_signal, test_file, fft_point.x)?;
+    }
+    Ok(())
+}
 fn main() -> anyhow::Result<()> {
     let test_files = [
         "cello_open_a.json",
@@ -61,13 +77,10 @@ fn main() -> anyhow::Result<()> {
         "cello_open_g.json",
         "cello_open_c.json",
         "tuner_c5.json",
+        // "noise.json",
     ];
-    let mut detector = AutocorrelationDetector;
-    plot(
-        &mut detector,
-        test_signal("tuner_c5.json")?,
-        "tuner_c5",
-        523.,
-    )?;
+    plot_detector_for_files(AutocorrelationDetector, &test_files)?;
+    plot_detector_for_files(PowerCepstrum, &test_files)?;
+    plot_detector_for_files(RawFftDetector, &test_files)?;
     Ok(())
 }

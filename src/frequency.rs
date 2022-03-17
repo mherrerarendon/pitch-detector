@@ -53,6 +53,24 @@ pub trait FrequencyDetectorTest {
         &mut self,
         signal: I,
         sample_rate: f64,
+    ) -> Option<FftPoint>
+    where
+        <I as IntoIterator>::Item: std::borrow::Borrow<f64>,
+    {
+        let signal_iter = signal.into_iter();
+        let mut fft_space = FftSpace::new_padded(
+            signal_iter
+                .size_hint()
+                .1
+                .expect("Signal length is not known"),
+        );
+        self.detect_unscaled_freq_with_space(signal_iter, sample_rate, &mut fft_space)
+    }
+
+    fn detect_unscaled_freq_with_space<I: IntoIterator>(
+        &mut self,
+        signal: I,
+        sample_rate: f64,
         fft_space: &mut FftSpace,
     ) -> Option<FftPoint>
     where

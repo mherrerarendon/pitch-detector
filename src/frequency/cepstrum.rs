@@ -112,7 +112,7 @@ mod test_utils {
             Self::spectrum(&fft_space, sample_rate).collect()
         }
 
-        fn detect_unscaled_freq<I: IntoIterator>(
+        fn detect_unscaled_freq_with_space<I: IntoIterator>(
             &mut self,
             signal: I,
             sample_rate: f64,
