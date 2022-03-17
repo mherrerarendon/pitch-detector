@@ -7,18 +7,13 @@ use freq_detector::{
 };
 use plotters::prelude::*;
 
-fn plot<D, I>(detector: &D, signal: I, plot_name: &str, expected_freq: f64) -> anyhow::Result<()>
+fn plot<D, I>(detector: &D, signal: I, plot_name: &str, fft_x: f64) -> anyhow::Result<()>
 where
     I: IntoIterator,
     <I as IntoIterator>::Item: std::borrow::Borrow<f64>,
     D: FrequencyDetector + FrequencyDetectorTest,
 {
-    let plot_title = format!(
-        "{} - {} - {:?} Hz",
-        detector.name(),
-        plot_name,
-        expected_freq
-    );
+    let plot_title = format!("{} - {} - {:.2} fft_x", detector.name(), plot_name, fft_x);
     let output_file = format!(
         "{}/test_data/results/{}.png",
         env!("CARGO_MANIFEST_DIR"),
