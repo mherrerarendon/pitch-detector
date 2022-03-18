@@ -1,6 +1,10 @@
+use fitting::gaussian::fit;
+use itertools::Itertools;
 use num_traits::Zero;
-use rustfft::num_complex::Complex;
+use rustfft::{num_complex::Complex, Fft};
 use std::borrow::Borrow;
+
+use crate::frequency::FftPoint;
 
 mod utils {
     use rustfft::num_complex::Complex;

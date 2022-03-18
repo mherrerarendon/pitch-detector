@@ -61,15 +61,19 @@ where
 pub struct AutocorrelationDetector;
 
 impl AutocorrelationDetector {
-    fn spectrum(
-        fft_space: &FftSpace,
-        sample_rate: f64,
-    ) -> Box<dyn Iterator<Item = (usize, f64)> + '_> {
+    fn relevant_fft_range(sample_rate: f64) -> (usize, usize) {
         // Frequency = SAMPLE_RATE / quefrency
         // With this in mind we can ignore the extremes of the power cepstrum
         // https://en.wikipedia.org/wiki/Cepstrum
         let lower_limit = (sample_rate / MAX_FREQ).round() as usize;
         let upper_limit = (sample_rate / MIN_FREQ).round() as usize;
+        (lower_limit, upper_limit)
+    }
+    fn spectrum(
+        fft_space: &FftSpace,
+        fft_range: (usize, usize),
+    ) -> Box<dyn Iterator<Item = (usize, f64)> + '_> {
+        let (lower_limit, upper_limit) = fft_range;
         Box::new(
             fft_space
                 .space()
@@ -100,14 +104,14 @@ impl AutocorrelationDetector {
 
     fn detect_unscaled_freq<I: IntoIterator>(
         signal: I,
-        sample_rate: f64,
+        fft_range: (usize, usize),
         fft_space: &mut FftSpace,
     ) -> Option<FftPoint>
     where
         <I as IntoIterator>::Item: std::borrow::Borrow<f64>,
     {
         Self::process_fft(signal, fft_space);
-        Self::spectrum(fft_space, sample_rate)
+        Self::spectrum(fft_space, fft_range)
             .into_iter()
             .skip_while(|(_, intensity)| *intensity > 0.001) // Skip the first slide down
             .autocorrelation_peaks()
@@ -125,7 +129,8 @@ impl FrequencyDetector for AutocorrelationDetector {
     where
         <I as IntoIterator>::Item: std::borrow::Borrow<f64>,
     {
-        Self::detect_unscaled_freq(signal, sample_rate, fft_space)
+        let fft_range = Self::relevant_fft_range(sample_rate);
+        Self::detect_unscaled_freq(signal, fft_range, fft_space)
             .map(|partial| sample_rate / partial.x)
     }
 }
@@ -140,7 +145,7 @@ mod test_utils {
     use super::AutocorrelationDetector;
 
     impl FrequencyDetectorTest for AutocorrelationDetector {
-        fn spectrum<'a, I>(&self, signal: I, sample_rate: f64) -> Vec<(usize, f64)>
+        fn unscaled_spectrum<'a, I>(&self, signal: I, fft_range: (usize, usize)) -> Vec<f64>
         where
             <I as IntoIterator>::Item: std::borrow::Borrow<f64>,
             I: IntoIterator + 'a,
@@ -153,19 +158,19 @@ mod test_utils {
                     .expect("Signal length is not known"),
             );
             Self::process_fft(signal_iter, &mut fft_space);
-            Self::spectrum(&fft_space, sample_rate).collect()
+            Self::spectrum(&fft_space, fft_range).map(|f| f.1).collect()
         }
 
         fn detect_unscaled_freq_with_space<I: IntoIterator>(
             &mut self,
             signal: I,
-            sample_rate: f64,
+            fft_range: (usize, usize),
             fft_space: &mut FftSpace,
         ) -> Option<FftPoint>
         where
             <I as IntoIterator>::Item: std::borrow::Borrow<f64>,
         {
-            Self::detect_unscaled_freq(signal, sample_rate, fft_space)
+            Self::detect_unscaled_freq(signal, fft_range, fft_space)
         }
 
         fn name(&self) -> &'static str {
@@ -192,7 +197,7 @@ mod tests {
     }
 
     #[test]
-    fn test_raw_fft_sine() -> anyhow::Result<()> {
+    fn test_autocorrelation_sine() -> anyhow::Result<()> {
         let mut detector = AutocorrelationDetector;
         test_sine_wave(&mut detector, 440.)?;
         Ok(())

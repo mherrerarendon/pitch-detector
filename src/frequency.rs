@@ -45,14 +45,15 @@ impl Default for FftPoint {
 
 #[cfg(feature = "test_utils")]
 pub trait FrequencyDetectorTest {
-    fn spectrum<'a, I>(&self, signal: I, sample_rate: f64) -> Vec<(usize, f64)>
+    fn unscaled_spectrum<'a, I>(&self, signal: I, fft_range: (usize, usize)) -> Vec<f64>
     where
         <I as IntoIterator>::Item: std::borrow::Borrow<f64>,
         I: IntoIterator + 'a;
+
     fn detect_unscaled_freq<I: IntoIterator>(
         &mut self,
         signal: I,
-        sample_rate: f64,
+        fft_range: (usize, usize),
     ) -> Option<FftPoint>
     where
         <I as IntoIterator>::Item: std::borrow::Borrow<f64>,
@@ -64,13 +65,13 @@ pub trait FrequencyDetectorTest {
                 .1
                 .expect("Signal length is not known"),
         );
-        self.detect_unscaled_freq_with_space(signal_iter, sample_rate, &mut fft_space)
+        self.detect_unscaled_freq_with_space(signal_iter, fft_range, &mut fft_space)
     }
 
     fn detect_unscaled_freq_with_space<I: IntoIterator>(
         &mut self,
         signal: I,
-        sample_rate: f64,
+        fft_range: (usize, usize),
         fft_space: &mut FftSpace,
     ) -> Option<FftPoint>
     where

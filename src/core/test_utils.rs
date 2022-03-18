@@ -42,7 +42,7 @@ pub fn test_fundamental_freq<D: FrequencyDetector>(
 
 pub fn test_sine_wave<D: FrequencyDetector>(detector: &mut D, freq: f64) -> anyhow::Result<()> {
     const SAMPLE_RATE: f64 = 44100.0;
-    let signal = sine_wave_signal(8192, 440., SAMPLE_RATE);
+    let signal = sine_wave_signal(16384, 440., SAMPLE_RATE);
 
     let actual_freq = detector
         .detect_frequency(&signal, SAMPLE_RATE)

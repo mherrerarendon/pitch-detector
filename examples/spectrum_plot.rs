@@ -1,5 +1,5 @@
 use freq_detector::{
-    core::test_utils::test_signal,
+    core::{test_utils::test_signal, utils::sine_wave_signal},
     frequency::{
         autocorrelation::AutocorrelationDetector, cepstrum::PowerCepstrum, raw_fft::RawFftDetector,
         FrequencyDetector, FrequencyDetectorTest,
@@ -20,7 +20,7 @@ where
         format!("{} - {}", detector.name(), plot_name)
     );
     let (x_vals, y_vals): (Vec<f64>, Vec<f64>) = detector
-        .spectrum(signal, 44000.)
+        .unscaled_spectrum(signal, 44000.)
         .iter()
         .map(|i| (i.0 as f64, i.1))
         .unzip();
@@ -65,10 +65,24 @@ fn plot_detector_for_files<D: FrequencyDetector + FrequencyDetectorTest>(
     }
     Ok(())
 }
+
+fn plot_detector_for_freq<D: FrequencyDetector + FrequencyDetectorTest>(
+    mut detector: D,
+    freq: f64,
+) -> anyhow::Result<()> {
+    const TEST_FILE_SAMPLE_RATE: f64 = 44100.;
+    const NUM_SAMPLES: usize = 16384;
+    let test_signal = sine_wave_signal(NUM_SAMPLES, freq, TEST_FILE_SAMPLE_RATE);
+    let fft_point = detector
+        .detect_unscaled_freq(&test_signal, TEST_FILE_SAMPLE_RATE)
+        .ok_or(anyhow::anyhow!(""))?;
+    plot(&detector, test_signal, "A440", fft_point.x)?;
+    Ok(())
+}
 fn main() -> anyhow::Result<()> {
     let test_files = [
         "cello_open_a.json",
-        "cello_open_c.json",
+        "cello_open_d.json",
         "cello_open_g.json",
         "cello_open_c.json",
         "tuner_c5.json",
@@ -77,5 +91,8 @@ fn main() -> anyhow::Result<()> {
     plot_detector_for_files(AutocorrelationDetector, &test_files)?;
     plot_detector_for_files(PowerCepstrum, &test_files)?;
     plot_detector_for_files(RawFftDetector, &test_files)?;
+    plot_detector_for_freq(AutocorrelationDetector, 440.)?;
+    // plot_detector_for_freq(PowerCepstrum, 440.)?;
+    plot_detector_for_freq(RawFftDetector, 440.)?;
     Ok(())
 }
