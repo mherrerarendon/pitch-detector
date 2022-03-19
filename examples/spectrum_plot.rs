@@ -1,11 +1,13 @@
 use freq_detector::{
-    core::{test_utils::test_signal, utils::sine_wave_signal},
+    core::{fft_space::FftSpace, test_utils::test_signal, utils::sine_wave_signal},
     frequency::{
         autocorrelation::AutocorrelationDetector, cepstrum::PowerCepstrum, raw_fft::RawFftDetector,
         FrequencyDetector, FrequencyDetectorTest,
     },
 };
 use plotters::prelude::*;
+
+const TEST_FILE_SAMPLE_RATE: f64 = 44000.;
 
 fn plot<D, I>(detector: &D, signal: I, plot_name: &str, fft_x: f64) -> anyhow::Result<()>
 where
@@ -19,11 +21,19 @@ where
         env!("CARGO_MANIFEST_DIR"),
         format!("{} - {}", detector.name(), plot_name)
     );
-    let (x_vals, y_vals): (Vec<f64>, Vec<f64>) = detector
-        .unscaled_spectrum(signal, 44000.)
-        .iter()
-        .map(|i| (i.0 as f64, i.1))
-        .unzip();
+    let signal_iter = signal.into_iter();
+
+    let fft_space = FftSpace::new(signal_iter.size_hint().1.unwrap());
+    let fft_range = detector.relevant_fft_range(fft_space.len(), TEST_FILE_SAMPLE_RATE);
+    let y_vals: Vec<f64> = detector.unscaled_spectrum(signal_iter, fft_range);
+    let x_vals = (fft_range.0..fft_range.1)
+        .map(|i| i as f64)
+        .collect::<Vec<_>>();
+    assert_eq!(
+        x_vals.len(),
+        y_vals.len(),
+        "x and y values are not the same length"
+    );
     let y_min = y_vals.iter().cloned().reduce(f64::min).unwrap();
     let y_max = y_vals.iter().cloned().reduce(f64::max).unwrap();
     let root = BitMapBackend::new(&output_file, (1024, 768)).into_drawing_area();
@@ -55,13 +65,15 @@ fn plot_detector_for_files<D: FrequencyDetector + FrequencyDetectorTest>(
     mut detector: D,
     test_files: &[&str],
 ) -> anyhow::Result<()> {
-    const TEST_FILE_SAMPLE_RATE: f64 = 44000.;
     for test_file in test_files {
         let test_signal = test_signal(test_file)?;
-        let fft_point = detector
-            .detect_unscaled_freq(&test_signal, TEST_FILE_SAMPLE_RATE)
+        let mut fft_space = FftSpace::new_padded(test_signal.len());
+        let fft_range = detector.relevant_fft_range(fft_space.len(), TEST_FILE_SAMPLE_RATE);
+        let fft_point_x = detector
+            .detect_unscaled_freq_with_space(&test_signal, fft_range, &mut fft_space)
+            .map(|p| p.x)
             .ok_or(anyhow::anyhow!(""))?;
-        plot(&detector, test_signal, test_file, fft_point.x)?;
+        plot(&detector, test_signal, test_file, fft_point_x)?;
     }
     Ok(())
 }
@@ -73,10 +85,15 @@ fn plot_detector_for_freq<D: FrequencyDetector + FrequencyDetectorTest>(
     const TEST_FILE_SAMPLE_RATE: f64 = 44100.;
     const NUM_SAMPLES: usize = 16384;
     let test_signal = sine_wave_signal(NUM_SAMPLES, freq, TEST_FILE_SAMPLE_RATE);
-    let fft_point = detector
-        .detect_unscaled_freq(&test_signal, TEST_FILE_SAMPLE_RATE)
-        .ok_or(anyhow::anyhow!(""))?;
-    plot(&detector, test_signal, "A440", fft_point.x)?;
+    let mut fft_space = FftSpace::new_padded(test_signal.len());
+    let fft_range = detector.relevant_fft_range(fft_space.len(), TEST_FILE_SAMPLE_RATE);
+    let fft_point_x = detector
+        .detect_unscaled_freq_with_space(&test_signal, fft_range, &mut fft_space)
+        .map(|p| p.x)
+        .ok_or(anyhow::anyhow!(
+            "Failed to detect unscaled frequency with space"
+        ))?;
+    plot(&detector, test_signal, "A440", fft_point_x)?;
     Ok(())
 }
 fn main() -> anyhow::Result<()> {
@@ -91,6 +108,7 @@ fn main() -> anyhow::Result<()> {
     plot_detector_for_files(AutocorrelationDetector, &test_files)?;
     plot_detector_for_files(PowerCepstrum, &test_files)?;
     plot_detector_for_files(RawFftDetector, &test_files)?;
+
     plot_detector_for_freq(AutocorrelationDetector, 440.)?;
     // plot_detector_for_freq(PowerCepstrum, 440.)?;
     plot_detector_for_freq(RawFftDetector, 440.)?;

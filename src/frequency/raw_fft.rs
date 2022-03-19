@@ -115,6 +115,10 @@ mod test_utils {
             Self::unscaled_spectrum(&fft_space, fft_range).collect()
         }
 
+        fn relevant_fft_range(&self, fft_space_len: usize, sample_rate: f64) -> (usize, usize) {
+            Self::relevant_fft_range(fft_space_len, sample_rate)
+        }
+
         fn detect_unscaled_freq_with_space<I: IntoIterator>(
             &mut self,
             signal: I,
@@ -142,6 +146,7 @@ mod tests {
     fn test_raw_fft() -> anyhow::Result<()> {
         let mut detector = RawFftDetector;
 
+        test_fundamental_freq(&mut detector, "tuner_c5.json", 523.242)?;
         test_fundamental_freq(&mut detector, "cello_open_a.json", 219.383)?;
         test_fundamental_freq(&mut detector, "cello_open_d.json", 146.732)?;
         test_fundamental_freq(&mut detector, "cello_open_g.json", 97.209)?;

@@ -50,6 +50,8 @@ pub trait FrequencyDetectorTest {
         <I as IntoIterator>::Item: std::borrow::Borrow<f64>,
         I: IntoIterator + 'a;
 
+    fn relevant_fft_range(&self, fft_space_len: usize, sample_rate: f64) -> (usize, usize);
+
     fn detect_unscaled_freq<I: IntoIterator>(
         &mut self,
         signal: I,
