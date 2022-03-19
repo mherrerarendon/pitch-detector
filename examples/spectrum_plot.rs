@@ -9,7 +9,13 @@ use plotters::prelude::*;
 
 const TEST_FILE_SAMPLE_RATE: f64 = 44000.;
 
-fn plot<D, I>(detector: &D, signal: I, plot_name: &str, fft_x: f64) -> anyhow::Result<()>
+fn plot<D, I>(
+    detector: &D,
+    signal: I,
+    fft_range: (usize, usize),
+    plot_name: &str,
+    fft_x: f64,
+) -> anyhow::Result<()>
 where
     I: IntoIterator,
     <I as IntoIterator>::Item: std::borrow::Borrow<f64>,
@@ -23,12 +29,8 @@ where
     );
     let signal_iter = signal.into_iter();
 
-    let fft_space = FftSpace::new(signal_iter.size_hint().1.unwrap());
-    let fft_range = detector.relevant_fft_range(fft_space.len(), TEST_FILE_SAMPLE_RATE);
     let y_vals: Vec<f64> = detector.unscaled_spectrum(signal_iter, fft_range);
-    let x_vals = (fft_range.0..fft_range.1)
-        .map(|i| i as f64)
-        .collect::<Vec<_>>();
+    let x_vals: Vec<f64> = (0..y_vals.len()).map(|x| x as f64).collect();
     assert_eq!(
         x_vals.len(),
         y_vals.len(),
@@ -73,7 +75,7 @@ fn plot_detector_for_files<D: FrequencyDetector + FrequencyDetectorTest>(
             .detect_unscaled_freq_with_space(&test_signal, fft_range, &mut fft_space)
             .map(|p| p.x)
             .ok_or(anyhow::anyhow!(""))?;
-        plot(&detector, test_signal, test_file, fft_point_x)?;
+        plot(&detector, test_signal, fft_range, test_file, fft_point_x)?;
     }
     Ok(())
 }
@@ -93,7 +95,7 @@ fn plot_detector_for_freq<D: FrequencyDetector + FrequencyDetectorTest>(
         .ok_or(anyhow::anyhow!(
             "Failed to detect unscaled frequency with space"
         ))?;
-    plot(&detector, test_signal, "A440", fft_point_x)?;
+    plot(&detector, test_signal, fft_range, "A440", fft_point_x)?;
     Ok(())
 }
 fn main() -> anyhow::Result<()> {
