@@ -1,6 +1,6 @@
 use anyhow::Result;
 use float_cmp::ApproxEq;
-use freq_detector::{
+use pitch_detector::{
     core::{fft_space::FftSpace, utils::sine_wave_signal},
     pitch::{raw_fft::RawFftDetector, PitchDetector},
 };

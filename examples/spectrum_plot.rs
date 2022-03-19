@@ -1,4 +1,4 @@
-use freq_detector::{
+use pitch_detector::{
     core::{fft_space::FftSpace, test_utils::test_signal, utils::sine_wave_signal},
     pitch::{
         autocorrelation::AutocorrelationDetector, cepstrum::PowerCepstrum, raw_fft::RawFftDetector,
