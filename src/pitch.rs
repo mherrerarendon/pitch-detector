@@ -43,26 +43,6 @@ impl Default for FftPoint {
     }
 }
 
-pub trait HintedNoteDetector {
-    fn candidates<I>(&mut self, signal: I, sample_rate: f64, fft_space: &mut FftSpace) -> Vec<f64>
-    where
-        I: IntoIterator,
-        <I as IntoIterator>::Item: std::borrow::Borrow<f64>;
-
-    // fn detect_with_hint_and_fft_space<I>(
-    //     &mut self,
-    //     note_hint: NoteName,
-    //     signal: I,
-    //     sample_rate: f64,
-    //     fft_space: &mut FftSpace,
-    // ) -> Option<f64>
-    // where
-    //     I: IntoIterator,
-    //     <I as IntoIterator>::Item: std::borrow::Borrow<f64>,
-    // {
-    // }
-}
-
 #[cfg(feature = "test_utils")]
 pub trait FrequencyDetectorTest {
     fn unscaled_spectrum<'a, I>(&self, signal: I, fft_range: (usize, usize)) -> Vec<f64>
