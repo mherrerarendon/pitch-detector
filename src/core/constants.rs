@@ -1,4 +1,3 @@
-// pub const MAX_FREQ: f64 = 1500.0;
 pub const MAX_FREQ: f64 = 2093.0; // C7
 pub const MIN_FREQ: f64 = 32.7; // C1
 pub const A4_FREQ: f64 = 440.0;

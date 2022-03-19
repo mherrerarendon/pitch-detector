@@ -15,7 +15,12 @@ fn example_detect_frequency() -> Result<()> {
     let freq = detector
         .detect_frequency(signal, SAMPLE_RATE)
         .ok_or(anyhow::anyhow!("Did not get pitch"))?;
-    assert!(freq.approx_eq(A440, (0.02, 2)),);
+    assert!(
+        freq.approx_eq(A440, (0.02, 2)),
+        "Expected freq: {}, actual freq: {}",
+        A440,
+        freq
+    );
     Ok(())
 }
 
@@ -28,12 +33,18 @@ fn example_detect_frequency_reduced_alloc() -> Result<()> {
         let actual_freq = detector
             .detect_frequency_with_fft_space(signal, SAMPLE_RATE, &mut fft_space)
             .ok_or(anyhow::anyhow!("Did not get pitch"))?;
-        assert!(actual_freq.approx_eq(freq, (0.02, 2)),);
+        assert!(
+            actual_freq.approx_eq(freq, (0.1, 1)),
+            "Expected: {}, Actual: {}",
+            freq,
+            actual_freq
+        );
     }
     Ok(())
 }
 
 fn main() -> Result<()> {
     example_detect_frequency()?;
+    example_detect_frequency_reduced_alloc()?;
     Ok(())
 }

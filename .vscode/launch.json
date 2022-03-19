@@ -64,7 +64,7 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug example 'basic_usage'",
+            "name": "basic_usage",
             "cargo": {
                 "args": [
                     "build",

@@ -103,7 +103,6 @@ mod tests {
         test_pitch_from_f64(523.25, "C", 5, 0., "B", "C#", true)?;
         test_pitch_from_f64(880., "A", 5, 0., "G#", "A#", true)?;
         test_pitch_from_f64(220., "A", 3, 0., "G#", "A#", true)?;
-        // test_pitch_from_f64(27.51, "A", 0, 0.629, "G#", "A#", true)?;
         assert!(test_pitch_from_f64(0., "A", 0, 0., "G#", "A#", true).is_err());
         Ok(())
     }

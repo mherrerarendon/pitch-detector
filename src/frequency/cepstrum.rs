@@ -1,7 +1,6 @@
 use crate::core::{
     constants::{MAX_FREQ, MIN_FREQ},
     fft_space::FftSpace,
-    peak_iter::FftPeaks,
     utils::interpolated_peak_at,
 };
 use rustfft::{num_complex::Complex, FftPlanner};
@@ -140,7 +139,7 @@ mod test_utils {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::test_utils::{test_fundamental_freq, test_sine_wave};
+    use crate::core::test_utils::test_fundamental_freq;
 
     #[test]
     fn test_power() -> anyhow::Result<()> {
