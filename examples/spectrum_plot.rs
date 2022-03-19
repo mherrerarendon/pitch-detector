@@ -1,8 +1,8 @@
 use freq_detector::{
     core::{fft_space::FftSpace, test_utils::test_signal, utils::sine_wave_signal},
-    frequency::{
+    pitch::{
         autocorrelation::AutocorrelationDetector, cepstrum::PowerCepstrum, raw_fft::RawFftDetector,
-        FrequencyDetector, FrequencyDetectorTest,
+        FrequencyDetectorTest, PitchDetector,
     },
 };
 use plotters::prelude::*;
@@ -19,7 +19,7 @@ fn plot<D, I>(
 where
     I: IntoIterator,
     <I as IntoIterator>::Item: std::borrow::Borrow<f64>,
-    D: FrequencyDetector + FrequencyDetectorTest,
+    D: PitchDetector + FrequencyDetectorTest,
 {
     let plot_title = format!("{} - {} - {:.2} fft_x", detector.name(), plot_name, fft_x);
     let output_file = format!(
@@ -63,7 +63,7 @@ where
     Ok(())
 }
 
-fn plot_detector_for_files<D: FrequencyDetector + FrequencyDetectorTest>(
+fn plot_detector_for_files<D: PitchDetector + FrequencyDetectorTest>(
     mut detector: D,
     test_files: &[&str],
 ) -> anyhow::Result<()> {
@@ -80,7 +80,7 @@ fn plot_detector_for_files<D: FrequencyDetector + FrequencyDetectorTest>(
     Ok(())
 }
 
-fn plot_detector_for_freq<D: FrequencyDetector + FrequencyDetectorTest>(
+fn plot_detector_for_freq<D: PitchDetector + FrequencyDetectorTest>(
     mut detector: D,
     freq: f64,
 ) -> anyhow::Result<()> {

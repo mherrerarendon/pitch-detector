@@ -3,7 +3,7 @@ use float_cmp::ApproxEq;
 use serde::Deserialize;
 use std::fs;
 
-use crate::{core::utils::sine_wave_signal, frequency::FrequencyDetector};
+use crate::{core::utils::sine_wave_signal, pitch::PitchDetector};
 
 use super::utils::audio_buffer_to_signal;
 
@@ -19,7 +19,7 @@ pub fn test_signal(filename: &str) -> anyhow::Result<Vec<f64>> {
     Ok(audio_buffer_to_signal(&buffer))
 }
 
-pub fn test_fundamental_freq<D: FrequencyDetector>(
+pub fn test_fundamental_freq<D: PitchDetector>(
     detector: &mut D,
     samples_file: &str,
     expected_freq: f64,
@@ -28,7 +28,7 @@ pub fn test_fundamental_freq<D: FrequencyDetector>(
     let signal = test_signal(samples_file)?;
 
     let freq = detector
-        .detect_frequency(&signal, TEST_SAMPLE_RATE)
+        .detect(&signal, TEST_SAMPLE_RATE)
         .ok_or(anyhow::anyhow!("Did not get pitch"))?;
 
     assert!(
@@ -40,12 +40,12 @@ pub fn test_fundamental_freq<D: FrequencyDetector>(
     Ok(())
 }
 
-pub fn test_sine_wave<D: FrequencyDetector>(detector: &mut D, freq: f64) -> anyhow::Result<()> {
+pub fn test_sine_wave<D: PitchDetector>(detector: &mut D, freq: f64) -> anyhow::Result<()> {
     const SAMPLE_RATE: f64 = 44100.0;
     let signal = sine_wave_signal(16384, 440., SAMPLE_RATE);
 
     let actual_freq = detector
-        .detect_frequency(&signal, SAMPLE_RATE)
+        .detect(&signal, SAMPLE_RATE)
         .ok_or(anyhow::anyhow!("Did not get pitch"))?;
 
     assert!(

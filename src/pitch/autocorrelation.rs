@@ -1,14 +1,14 @@
-use crate::core::{
-    constants::{MAX_FREQ, MIN_FREQ},
-    fft_space::FftSpace,
-    utils::interpolated_peak_at,
+use crate::{
+    core::constants::{MAX_FREQ, MIN_FREQ},
+    core::{fft_space::FftSpace, utils::interpolated_peak_at},
 };
-use rustfft::{num_complex::Complex, FftPlanner};
+use rustfft::FftPlanner;
 
-use super::{FftPoint, FrequencyDetector};
+use super::{FftPoint, PitchDetector};
 
-pub struct PowerCepstrum;
-impl PowerCepstrum {
+pub struct AutocorrelationDetector;
+
+impl AutocorrelationDetector {
     fn relevant_fft_range(sample_rate: f64) -> (usize, usize) {
         // Frequency = SAMPLE_RATE / quefrency
         // With this in mind we can ignore the extremes of the power cepstrum
@@ -17,7 +17,6 @@ impl PowerCepstrum {
         let upper_limit = (sample_rate / MIN_FREQ).round() as usize;
         (lower_limit, upper_limit)
     }
-
     fn unscaled_spectrum(
         fft_space: &FftSpace,
         fft_range: (usize, usize),
@@ -25,10 +24,11 @@ impl PowerCepstrum {
         let (lower_limit, upper_limit) = fft_range;
         Box::new(
             fft_space
-                .freq_domain(false)
+                .space()
+                .iter()
                 .skip(lower_limit)
                 .take(upper_limit - lower_limit)
-                .map(|(amplitude, _)| amplitude),
+                .map(|f| f.re / fft_space.space()[0].re),
         )
     }
 
@@ -42,7 +42,8 @@ impl PowerCepstrum {
 
         let (space, scratch) = fft_space.workspace();
         forward_fft.process_with_scratch(space, scratch);
-        fft_space.map(|f| Complex::new(f.norm_sqr().log(std::f64::consts::E), 0.0));
+
+        fft_space.map(|f| f * f.conj());
         let (space, scratch) = fft_space.workspace();
         let inverse_fft = planner.plan_fft_inverse(space.len());
         inverse_fft.process_with_scratch(space, scratch);
@@ -72,8 +73,8 @@ impl PowerCepstrum {
     }
 }
 
-impl FrequencyDetector for PowerCepstrum {
-    fn detect_frequency_with_fft_space<I: IntoIterator>(
+impl PitchDetector for AutocorrelationDetector {
+    fn detect_with_fft_space<I: IntoIterator>(
         &mut self,
         signal: I,
         sample_rate: f64,
@@ -91,13 +92,13 @@ impl FrequencyDetector for PowerCepstrum {
 #[cfg(feature = "test_utils")]
 mod test_utils {
     use crate::{
-        core::{constants::test_utils::POWER_CEPSTRUM_ALGORITHM, fft_space::FftSpace},
-        frequency::{FftPoint, FrequencyDetectorTest},
+        core::{constants::test_utils::AUTOCORRELATION_ALGORITHM, fft_space::FftSpace},
+        pitch::{FftPoint, FrequencyDetectorTest},
     };
 
-    use super::PowerCepstrum;
+    use super::AutocorrelationDetector;
 
-    impl FrequencyDetectorTest for PowerCepstrum {
+    impl FrequencyDetectorTest for AutocorrelationDetector {
         fn unscaled_spectrum<'a, I>(&self, signal: I, fft_range: (usize, usize)) -> Vec<f64>
         where
             <I as IntoIterator>::Item: std::borrow::Borrow<f64>,
@@ -131,7 +132,7 @@ mod test_utils {
         }
 
         fn name(&self) -> &'static str {
-            POWER_CEPSTRUM_ALGORITHM
+            AUTOCORRELATION_ALGORITHM
         }
     }
 }
@@ -139,24 +140,24 @@ mod test_utils {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::test_utils::test_fundamental_freq;
+    use crate::core::test_utils::{test_fundamental_freq, test_sine_wave};
 
     #[test]
-    fn test_power() -> anyhow::Result<()> {
-        let mut detector = PowerCepstrum;
+    fn test_autocorrelation() -> anyhow::Result<()> {
+        let mut detector = AutocorrelationDetector;
 
-        test_fundamental_freq(&mut detector, "cello_open_a.json", 219.418)?;
-        test_fundamental_freq(&mut detector, "cello_open_d.json", 146.730)?;
-        test_fundamental_freq(&mut detector, "cello_open_g.json", 97.214)?;
-        test_fundamental_freq(&mut detector, "cello_open_c.json", 64.476)?;
+        test_fundamental_freq(&mut detector, "tuner_c5.json", 529.841)?;
+        test_fundamental_freq(&mut detector, "cello_open_a.json", 219.634)?;
+        test_fundamental_freq(&mut detector, "cello_open_d.json", 146.717)?;
+        test_fundamental_freq(&mut detector, "cello_open_g.json", 97.985)?;
+        test_fundamental_freq(&mut detector, "cello_open_c.json", 64.535)?;
         Ok(())
     }
 
-    // Power cepstrum doesn't work with sine waves since it looks for a harmonic sequence.
-    // #[test]
-    // fn test_raw_fft_sine() -> anyhow::Result<()> {
-    //     let mut detector = PowerCepstrum;
-    //     test_sine_wave(&mut detector, 440.)?;
-    //     Ok(())
-    // }
+    #[test]
+    fn test_autocorrelation_sine() -> anyhow::Result<()> {
+        let mut detector = AutocorrelationDetector;
+        test_sine_wave(&mut detector, 440.)?;
+        Ok(())
+    }
 }

@@ -1,22 +1,16 @@
-use crate::{
-    core::constants::{MAX_FREQ, MIN_FREQ},
-    core::{fft_space::FftSpace, utils::interpolated_peak_at},
+use crate::core::{
+    constants::{MAX_FREQ, MIN_FREQ},
+    fft_space::FftSpace,
+    utils::interpolated_peak_at,
 };
 use rustfft::FftPlanner;
+use std::borrow::Borrow;
 
-use super::{FftPoint, FrequencyDetector};
+use super::{FftPoint, PitchDetector};
 
-pub struct AutocorrelationDetector;
+pub struct RawFftDetector;
 
-impl AutocorrelationDetector {
-    fn relevant_fft_range(sample_rate: f64) -> (usize, usize) {
-        // Frequency = SAMPLE_RATE / quefrency
-        // With this in mind we can ignore the extremes of the power cepstrum
-        // https://en.wikipedia.org/wiki/Cepstrum
-        let lower_limit = (sample_rate / MAX_FREQ).round() as usize;
-        let upper_limit = (sample_rate / MIN_FREQ).round() as usize;
-        (lower_limit, upper_limit)
-    }
+impl RawFftDetector {
     fn unscaled_spectrum(
         fft_space: &FftSpace,
         fft_range: (usize, usize),
@@ -24,12 +18,17 @@ impl AutocorrelationDetector {
         let (lower_limit, upper_limit) = fft_range;
         Box::new(
             fft_space
-                .space()
-                .iter()
+                .freq_domain(true)
                 .skip(lower_limit)
                 .take(upper_limit - lower_limit)
-                .map(|f| f.re / fft_space.space()[0].re),
+                .map(|(amplitude, _)| amplitude),
         )
+    }
+
+    fn relevant_fft_range(fft_space_len: usize, sample_rate: f64) -> (usize, usize) {
+        let lower_limit = (MIN_FREQ * fft_space_len as f64 / sample_rate).round() as usize;
+        let upper_limit = (MAX_FREQ * fft_space_len as f64 / sample_rate).round() as usize;
+        (lower_limit, upper_limit)
     }
 
     fn process_fft<I: IntoIterator>(signal: I, fft_space: &mut FftSpace)
@@ -37,16 +36,20 @@ impl AutocorrelationDetector {
         <I as IntoIterator>::Item: std::borrow::Borrow<f64>,
     {
         let mut planner = FftPlanner::new();
-        let forward_fft = planner.plan_fft_forward(fft_space.len());
-        fft_space.init_fft_space(signal);
+        let fft = planner.plan_fft_forward(fft_space.len());
+        let signal_iter = signal.into_iter();
+        let signal_size = signal_iter
+            .size_hint()
+            .1
+            .expect("Signal length is not known");
+        fft_space.init_fft_space(
+            signal_iter
+                .zip(apodize::hanning_iter(signal_size))
+                .map(|(x, y)| x.borrow() * y),
+        );
 
         let (space, scratch) = fft_space.workspace();
-        forward_fft.process_with_scratch(space, scratch);
-
-        fft_space.map(|f| f * f.conj());
-        let (space, scratch) = fft_space.workspace();
-        let inverse_fft = planner.plan_fft_inverse(space.len());
-        inverse_fft.process_with_scratch(space, scratch);
+        fft.process_with_scratch(space, scratch);
     }
 
     fn detect_unscaled_freq<I: IntoIterator>(
@@ -59,22 +62,19 @@ impl AutocorrelationDetector {
     {
         Self::process_fft(signal, fft_space);
         let unscaled_spectrum: Vec<f64> = Self::unscaled_spectrum(fft_space, fft_range).collect();
-        let fft_point = unscaled_spectrum
-            .iter()
-            .enumerate()
-            .reduce(|accum, quefrency| {
-                if quefrency.1 > accum.1 {
-                    quefrency
-                } else {
-                    accum
-                }
-            })?;
+        let fft_point = unscaled_spectrum.iter().enumerate().reduce(|accum, item| {
+            if item.1 > accum.1 {
+                item
+            } else {
+                accum
+            }
+        })?;
         interpolated_peak_at(&unscaled_spectrum, fft_point.0)
     }
 }
 
-impl FrequencyDetector for AutocorrelationDetector {
-    fn detect_frequency_with_fft_space<I: IntoIterator>(
+impl PitchDetector for RawFftDetector {
+    fn detect_with_fft_space<I: IntoIterator>(
         &mut self,
         signal: I,
         sample_rate: f64,
@@ -83,22 +83,22 @@ impl FrequencyDetector for AutocorrelationDetector {
     where
         <I as IntoIterator>::Item: std::borrow::Borrow<f64>,
     {
-        let (lower_limit, upper_limit) = Self::relevant_fft_range(sample_rate);
+        let (lower_limit, upper_limit) = Self::relevant_fft_range(fft_space.len(), sample_rate);
         Self::detect_unscaled_freq(signal, (lower_limit, upper_limit), fft_space)
-            .map(|point| sample_rate / (lower_limit as f64 + point.x))
+            .map(|point| (lower_limit as f64 + point.x) * sample_rate / fft_space.len() as f64)
     }
 }
 
 #[cfg(feature = "test_utils")]
 mod test_utils {
     use crate::{
-        core::{constants::test_utils::AUTOCORRELATION_ALGORITHM, fft_space::FftSpace},
-        frequency::{FftPoint, FrequencyDetectorTest},
+        core::{constants::test_utils::RAW_FFT_ALGORITHM, fft_space::FftSpace},
+        pitch::{FftPoint, FrequencyDetectorTest},
     };
 
-    use super::AutocorrelationDetector;
+    use super::RawFftDetector;
 
-    impl FrequencyDetectorTest for AutocorrelationDetector {
+    impl FrequencyDetectorTest for RawFftDetector {
         fn unscaled_spectrum<'a, I>(&self, signal: I, fft_range: (usize, usize)) -> Vec<f64>
         where
             <I as IntoIterator>::Item: std::borrow::Borrow<f64>,
@@ -115,8 +115,8 @@ mod test_utils {
             Self::unscaled_spectrum(&fft_space, fft_range).collect()
         }
 
-        fn relevant_fft_range(&self, _fft_space_len: usize, sample_rate: f64) -> (usize, usize) {
-            Self::relevant_fft_range(sample_rate)
+        fn relevant_fft_range(&self, fft_space_len: usize, sample_rate: f64) -> (usize, usize) {
+            Self::relevant_fft_range(fft_space_len, sample_rate)
         }
 
         fn detect_unscaled_freq_with_space<I: IntoIterator>(
@@ -132,7 +132,7 @@ mod test_utils {
         }
 
         fn name(&self) -> &'static str {
-            AUTOCORRELATION_ALGORITHM
+            RAW_FFT_ALGORITHM
         }
     }
 }
@@ -143,20 +143,22 @@ mod tests {
     use crate::core::test_utils::{test_fundamental_freq, test_sine_wave};
 
     #[test]
-    fn test_autocorrelation() -> anyhow::Result<()> {
-        let mut detector = AutocorrelationDetector;
+    fn test_raw_fft() -> anyhow::Result<()> {
+        let mut detector = RawFftDetector;
 
-        test_fundamental_freq(&mut detector, "tuner_c5.json", 529.841)?;
-        test_fundamental_freq(&mut detector, "cello_open_a.json", 219.634)?;
-        test_fundamental_freq(&mut detector, "cello_open_d.json", 146.717)?;
-        test_fundamental_freq(&mut detector, "cello_open_g.json", 97.985)?;
-        test_fundamental_freq(&mut detector, "cello_open_c.json", 64.535)?;
+        test_fundamental_freq(&mut detector, "tuner_c5.json", 523.242)?;
+        test_fundamental_freq(&mut detector, "cello_open_a.json", 219.383)?;
+        test_fundamental_freq(&mut detector, "cello_open_d.json", 146.732)?;
+        test_fundamental_freq(&mut detector, "cello_open_g.json", 97.209)?;
+
+        // Fails to detect open C, which should be around 64 Hz
+        test_fundamental_freq(&mut detector, "cello_open_c.json", 129.046)?;
         Ok(())
     }
 
     #[test]
-    fn test_autocorrelation_sine() -> anyhow::Result<()> {
-        let mut detector = AutocorrelationDetector;
+    fn test_raw_fft_sine() -> anyhow::Result<()> {
+        let mut detector = RawFftDetector;
         test_sine_wave(&mut detector, 440.)?;
         Ok(())
     }
