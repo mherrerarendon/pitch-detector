@@ -1,5 +1,6 @@
-pub const MAX_FREQ: f64 = 4186.0;
-pub const MIN_FREQ: f64 = 27.5;
+// pub const MAX_FREQ: f64 = 1500.0;
+pub const MAX_FREQ: f64 = 2093.0; // C7
+pub const MIN_FREQ: f64 = 32.7; // C1
 pub const A4_FREQ: f64 = 440.0;
 pub const NOTES: [&str; 12] = [
     "A", "A#", "B", "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#",

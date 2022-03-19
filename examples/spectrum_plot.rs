@@ -105,6 +105,8 @@ fn main() -> anyhow::Result<()> {
         "tuner_c5.json",
         // "noise.json",
     ];
+    // I'm not sure why the raw fft x values look wrong in the plot.
+
     plot_detector_for_files(AutocorrelationDetector, &test_files)?;
     plot_detector_for_files(PowerCepstrum, &test_files)?;
     plot_detector_for_files(RawFftDetector, &test_files)?;
