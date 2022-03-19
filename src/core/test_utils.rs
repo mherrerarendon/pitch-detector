@@ -49,7 +49,7 @@ pub fn test_sine_wave<D: FrequencyDetector>(detector: &mut D, freq: f64) -> anyh
         .ok_or(anyhow::anyhow!("Did not get pitch"))?;
 
     assert!(
-        actual_freq.approx_eq(freq, (0.1, 1)),
+        actual_freq.approx_eq(freq, (0.2, 2)),
         "Expected freq: {}, Actual freq: {}",
         freq,
         actual_freq

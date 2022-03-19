@@ -22,13 +22,12 @@ pub fn audio_buffer_to_signal(byte_buffer: &[u8]) -> Vec<f64> {
 }
 
 pub fn interpolated_peak_at(spectrum: &[f64], fft_point_x: usize) -> Option<FftPoint> {
-    // TODO: indexes are off here
     let mut idx = fft_point_x;
     let peak_begin_idx = loop {
         if idx == 0 {
             break idx;
         }
-        if spectrum[idx] < spectrum[idx - 1] {
+        if spectrum[idx] < spectrum[idx - 1] || spectrum[idx - 1] <= 0. {
             break idx;
         }
         idx -= 1;
@@ -38,7 +37,7 @@ pub fn interpolated_peak_at(spectrum: &[f64], fft_point_x: usize) -> Option<FftP
         if idx == spectrum.len() - 1 {
             break idx;
         }
-        if spectrum[idx] < spectrum[idx + 1] {
+        if spectrum[idx] < spectrum[idx + 1] || spectrum[idx + 1] <= 0. {
             break idx;
         }
         idx += 1;

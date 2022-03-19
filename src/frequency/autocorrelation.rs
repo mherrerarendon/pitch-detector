@@ -1,62 +1,10 @@
 use crate::{
     core::constants::{MAX_FREQ, MIN_FREQ},
-    core::fft_space::FftSpace,
+    core::{fft_space::FftSpace, utils::interpolated_peak_at},
 };
-use fitting::gaussian::fit;
 use rustfft::FftPlanner;
 
 use super::{FftPoint, FrequencyDetector};
-
-struct AutocorrelationPeakIter<I: Iterator<Item = (usize, f64)>> {
-    signal: I,
-}
-
-trait AutocorrelationPeaks<I>
-where
-    I: Iterator<Item = (usize, f64)>,
-{
-    fn autocorrelation_peaks(self) -> AutocorrelationPeakIter<I>;
-}
-
-impl<I> AutocorrelationPeaks<I> for I
-where
-    I: Iterator<Item = (usize, f64)>,
-{
-    fn autocorrelation_peaks(self) -> AutocorrelationPeakIter<I> {
-        AutocorrelationPeakIter { signal: self }
-    }
-}
-
-impl<I> Iterator for AutocorrelationPeakIter<I>
-where
-    I: Iterator<Item = (usize, f64)>,
-{
-    type Item = FftPoint;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        let (x_vals, y_vals): (Vec<f64>, Vec<f64>) = self
-            .signal
-            .by_ref()
-            .skip_while(|(_, intensity)| *intensity <= 0.0)
-            .take_while(|(_, intensity)| *intensity >= 0.0)
-            .map(|(index, intensity)| (index as f64, intensity))
-            .unzip();
-
-        if x_vals.is_empty() {
-            return None;
-        }
-
-        // mu, sigma, a
-        if let Ok((mu, _, amplitude)) = fit(x_vals.into(), y_vals.into()) {
-            Some(FftPoint {
-                x: mu,
-                y: amplitude,
-            })
-        } else {
-            None
-        }
-    }
-}
 
 pub struct AutocorrelationDetector;
 
@@ -69,19 +17,18 @@ impl AutocorrelationDetector {
         let upper_limit = (sample_rate / MIN_FREQ).round() as usize;
         (lower_limit, upper_limit)
     }
-    fn spectrum(
+    fn unscaled_spectrum(
         fft_space: &FftSpace,
         fft_range: (usize, usize),
-    ) -> Box<dyn Iterator<Item = (usize, f64)> + '_> {
+    ) -> Box<dyn Iterator<Item = f64> + '_> {
         let (lower_limit, upper_limit) = fft_range;
         Box::new(
             fft_space
                 .space()
                 .iter()
-                .enumerate()
                 .skip(lower_limit)
                 .take(upper_limit - lower_limit)
-                .map(|(idx, f)| (idx /*+ 1*/, f.re / fft_space.space()[0].re)),
+                .map(|f| f.re / fft_space.space()[0].re),
         )
     }
 
@@ -111,11 +58,18 @@ impl AutocorrelationDetector {
         <I as IntoIterator>::Item: std::borrow::Borrow<f64>,
     {
         Self::process_fft(signal, fft_space);
-        Self::spectrum(fft_space, fft_range)
-            .into_iter()
-            .skip_while(|(_, intensity)| *intensity > 0.001) // Skip the first slide down
-            .autocorrelation_peaks()
-            .reduce(|accum, point| if point.y > accum.y { point } else { accum })
+        let unscaled_spectrum: Vec<f64> = Self::unscaled_spectrum(fft_space, fft_range).collect();
+        let fft_point = unscaled_spectrum
+            .iter()
+            .enumerate()
+            .reduce(|accum, quefrency| {
+                if quefrency.1 > accum.1 {
+                    quefrency
+                } else {
+                    accum
+                }
+            })?;
+        interpolated_peak_at(&unscaled_spectrum, fft_point.0)
     }
 }
 
@@ -129,9 +83,9 @@ impl FrequencyDetector for AutocorrelationDetector {
     where
         <I as IntoIterator>::Item: std::borrow::Borrow<f64>,
     {
-        let fft_range = Self::relevant_fft_range(sample_rate);
-        Self::detect_unscaled_freq(signal, fft_range, fft_space)
-            .map(|partial| sample_rate / partial.x)
+        let (lower_limit, upper_limit) = Self::relevant_fft_range(sample_rate);
+        Self::detect_unscaled_freq(signal, (lower_limit, upper_limit), fft_space)
+            .map(|point| sample_rate / (lower_limit as f64 + point.x))
     }
 }
 
@@ -158,7 +112,7 @@ mod test_utils {
                     .expect("Signal length is not known"),
             );
             Self::process_fft(signal_iter, &mut fft_space);
-            Self::spectrum(&fft_space, fft_range).map(|f| f.1).collect()
+            Self::unscaled_spectrum(&fft_space, fft_range).collect()
         }
 
         fn relevant_fft_range(&self, _fft_space_len: usize, sample_rate: f64) -> (usize, usize) {
@@ -186,7 +140,7 @@ mod test_utils {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::test_utils::test_fundamental_freq;
+    use crate::core::test_utils::{test_fundamental_freq, test_sine_wave};
 
     #[test]
     fn test_autocorrelation() -> anyhow::Result<()> {
@@ -200,11 +154,10 @@ mod tests {
         Ok(())
     }
 
-    // Doesn't pass yet.
-    // #[test]
-    // fn test_autocorrelation_sine() -> anyhow::Result<()> {
-    //     let mut detector = AutocorrelationDetector;
-    //     test_sine_wave(&mut detector, 440.)?;
-    //     Ok(())
-    // }
+    #[test]
+    fn test_autocorrelation_sine() -> anyhow::Result<()> {
+        let mut detector = AutocorrelationDetector;
+        test_sine_wave(&mut detector, 440.)?;
+        Ok(())
+    }
 }
