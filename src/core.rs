@@ -1,3 +1,5 @@
+use std::fmt;
+
 pub(crate) mod constants;
 pub mod fft_space;
 pub mod utils;
@@ -56,6 +58,25 @@ impl From<&str> for NoteName {
             "G" => NoteName::G,
             "G#" => NoteName::GSharp,
             _ => panic!("Invalid pitch"),
+        }
+    }
+}
+
+impl fmt::Display for NoteName {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            NoteName::A => write!(f, "A"),
+            NoteName::ASharp => write!(f, "A#"),
+            NoteName::B => write!(f, "B"),
+            NoteName::C => write!(f, "C"),
+            NoteName::CSharp => write!(f, "C#"),
+            NoteName::D => write!(f, "D"),
+            NoteName::DSharp => write!(f, "D#"),
+            NoteName::E => write!(f, "E"),
+            NoteName::F => write!(f, "F"),
+            NoteName::FSharp => write!(f, "F#"),
+            NoteName::G => write!(f, "G"),
+            NoteName::GSharp => write!(f, "G#"),
         }
     }
 }
