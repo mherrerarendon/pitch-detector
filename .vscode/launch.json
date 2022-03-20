@@ -7,16 +7,16 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug unit tests in library 'freq_detector'",
+            "name": "Debug unit tests in library 'pitch_detector'",
             "cargo": {
                 "args": [
                     "test",
                     "--no-run",
                     "--lib",
-                    "--package=freq-detector"
+                    "--package=pitch-detector"
                 ],
                 "filter": {
-                    "name": "freq_detector",
+                    "name": "pitch_detector",
                     "kind": "lib"
                 }
             },
@@ -31,7 +31,7 @@
                 "args": [
                     "build",
                     "--example=spectrum_plot",
-                    "--package=freq-detector",
+                    "--package=pitch-detector",
                     "--features=test_utils"
                 ],
                 "filter": {
@@ -51,7 +51,7 @@
                     "test",
                     "--no-run",
                     "--example=spectrum_plot",
-                    "--package=freq-detector"
+                    "--package=pitch-detector"
                 ],
                 "filter": {
                     "name": "spectrum_plot",
@@ -69,7 +69,7 @@
                 "args": [
                     "build",
                     "--example=basic_usage",
-                    "--package=freq-detector"
+                    "--package=pitch-detector"
                 ],
                 "filter": {
                     "name": "basic_usage",
@@ -88,7 +88,7 @@
                     "test",
                     "--no-run",
                     "--example=basic_usage",
-                    "--package=freq-detector"
+                    "--package=pitch-detector"
                 ],
                 "filter": {
                     "name": "basic_usage",

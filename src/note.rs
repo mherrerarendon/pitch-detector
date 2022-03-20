@@ -41,14 +41,12 @@ impl TryFrom<f64> for NoteDetectionResult {
     }
 }
 
-pub fn detect<I, D>(
-    signal: I,
+pub fn detect<D>(
+    signal: &[f64],
     freq_detector: &mut D,
     sample_rate: f64,
 ) -> Option<NoteDetectionResult>
 where
-    I: IntoIterator,
-    <I as IntoIterator>::Item: std::borrow::Borrow<f64>,
     D: PitchDetector,
 {
     freq_detector
@@ -56,19 +54,16 @@ where
         .and_then(|f| f.try_into().ok())
 }
 
-pub fn detect_with_fft_space<I, D>(
-    signal: I,
+pub fn detect_with_fft_space<D>(
     freq_detector: &mut D,
     sample_rate: f64,
     fft_space: &mut FftSpace,
 ) -> Option<NoteDetectionResult>
 where
-    I: IntoIterator,
-    <I as IntoIterator>::Item: std::borrow::Borrow<f64>,
     D: PitchDetector,
 {
     freq_detector
-        .detect_with_fft_space(signal, sample_rate, fft_space)
+        .detect_with_fft_space(sample_rate, fft_space)
         .and_then(|f| f.try_into().ok())
 }
 

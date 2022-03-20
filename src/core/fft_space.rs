@@ -39,13 +39,6 @@ pub struct FftSpace {
 
 impl FftSpace {
     pub fn new(size: usize) -> Self {
-        FftSpace {
-            space: vec![Complex::zero(); size],
-            scratch: vec![Complex::zero(); size],
-        }
-    }
-
-    pub fn new_padded(size: usize) -> Self {
         let mut padded_size = (2usize).pow(10);
         padded_size = loop {
             if padded_size < size {
@@ -78,7 +71,7 @@ impl FftSpace {
         (&mut self.space, &mut self.scratch)
     }
 
-    pub fn init_fft_space<I: IntoIterator>(&mut self, signal: I)
+    pub fn init_with_signal<I: IntoIterator>(&mut self, signal: I)
     where
         <I as IntoIterator>::Item: std::borrow::Borrow<f64>,
     {
