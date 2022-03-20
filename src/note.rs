@@ -29,13 +29,17 @@ impl TryFrom<f64> for NoteDetectionResult {
         let cents_offset = (steps_from_a4 - steps_from_a4.round()) * 100.0;
         Ok(Self {
             freq,
-            note_name: NOTES[(steps_from_a4.round() as usize) % NOTES.len()].into(),
+            note_name: NOTES
+                [(steps_from_a4.round() as isize).rem_euclid(NOTES.len() as isize) as usize]
+                .into(),
             octave: (5. + (steps_from_c5 / 12.0).floor()) as i32,
             cents_offset,
             previous_note_name: NOTES
                 [(steps_from_a4.round() as isize - 1).rem_euclid(NOTES.len() as isize) as usize]
                 .into(),
-            next_note_name: NOTES[(steps_from_a4.round() as usize + 1) % NOTES.len()].into(),
+            next_note_name: NOTES
+                [(steps_from_a4.round() as isize + 1).rem_euclid(NOTES.len() as isize) as usize]
+                .into(),
             in_tune: cents_offset.abs() < MAX_CENTS_OFFSET,
         })
     }
@@ -82,10 +86,14 @@ mod tests {
         in_tune: bool,
     ) -> Result<()> {
         let pitch = NoteDetectionResult::try_from(freq)?;
-        assert_eq!(pitch.note_name, note_name);
+        assert_eq!(
+            pitch.note_name, note_name,
+            "Expected note name {}, got {}",
+            note_name, pitch.note_name
+        );
         assert_eq!(pitch.octave, octave);
         assert!(
-            pitch.cents_offset.approx_eq(cents_offset, (0.02, 2)),
+            pitch.cents_offset.approx_eq(cents_offset, (0.1, 1)),
             "Expected cents_offset: {}, actual cents_offset: {}",
             cents_offset,
             pitch.cents_offset
@@ -98,6 +106,51 @@ mod tests {
 
     #[test]
     fn pitch_from_f64_works() -> Result<()> {
+        test_pitch_from_f64(
+            311.13,
+            NoteName::DSharp,
+            4,
+            0.,
+            NoteName::D,
+            NoteName::E,
+            true,
+        )?;
+        test_pitch_from_f64(
+            329.63,
+            NoteName::E,
+            4,
+            0.,
+            NoteName::DSharp,
+            NoteName::F,
+            true,
+        )?;
+        test_pitch_from_f64(
+            349.23,
+            NoteName::F,
+            4,
+            0.,
+            NoteName::E,
+            NoteName::FSharp,
+            true,
+        )?;
+        test_pitch_from_f64(
+            369.99,
+            NoteName::FSharp,
+            4,
+            0.,
+            NoteName::F,
+            NoteName::G,
+            true,
+        )?;
+        test_pitch_from_f64(
+            392.,
+            NoteName::G,
+            4,
+            0.,
+            NoteName::FSharp,
+            NoteName::GSharp,
+            true,
+        )?;
         test_pitch_from_f64(
             440.,
             NoteName::A,
