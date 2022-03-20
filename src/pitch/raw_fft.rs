@@ -4,7 +4,6 @@ use crate::core::{
     utils::interpolated_peak_at,
 };
 use rustfft::FftPlanner;
-use std::borrow::Borrow;
 
 use super::{FftPoint, PitchDetector};
 
@@ -33,11 +32,12 @@ impl RawFftDetector {
 
     fn process_fft(fft_space: &mut FftSpace) {
         let mut planner = FftPlanner::new();
-        let fft_len = fft_space.len();
+        let fft_len = fft_space.padded_len();
+        let signal_len = fft_space.signal_len();
         let fft = planner.plan_fft_forward(fft_len);
 
         let (space, scratch) = fft_space.workspace();
-        let hanning = apodize::hanning_iter(fft_len);
+        let hanning = apodize::hanning_iter(signal_len);
         space.iter_mut().zip(hanning).for_each(|(s, h)| s.re *= h);
         fft.process_with_scratch(space, scratch);
     }
@@ -61,9 +61,11 @@ impl RawFftDetector {
 
 impl PitchDetector for RawFftDetector {
     fn detect_with_fft_space(&mut self, sample_rate: f64, fft_space: &mut FftSpace) -> Option<f64> {
-        let (lower_limit, upper_limit) = Self::relevant_fft_range(fft_space.len(), sample_rate);
-        Self::detect_unscaled_freq((lower_limit, upper_limit), fft_space)
-            .map(|point| (lower_limit as f64 + point.x) * sample_rate / fft_space.len() as f64)
+        let (lower_limit, upper_limit) =
+            Self::relevant_fft_range(fft_space.padded_len(), sample_rate);
+        Self::detect_unscaled_freq((lower_limit, upper_limit), fft_space).map(|point| {
+            (lower_limit as f64 + point.x) * sample_rate / fft_space.padded_len() as f64
+        })
     }
 }
 

@@ -34,7 +34,7 @@ impl AutocorrelationDetector {
 
     fn process_fft(fft_space: &mut FftSpace) {
         let mut planner = FftPlanner::new();
-        let forward_fft = planner.plan_fft_forward(fft_space.len());
+        let forward_fft = planner.plan_fft_forward(fft_space.padded_len());
 
         let (space, scratch) = fft_space.workspace();
         forward_fft.process_with_scratch(space, scratch);

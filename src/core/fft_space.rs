@@ -33,6 +33,7 @@ mod utils {
     }
 }
 pub struct FftSpace {
+    signal_len: usize,
     space: Vec<Complex<f64>>,
     scratch: Vec<Complex<f64>>,
 }
@@ -48,6 +49,7 @@ impl FftSpace {
             }
         };
         FftSpace {
+            signal_len: size,
             space: vec![Complex::zero(); padded_size],
             scratch: vec![Complex::zero(); padded_size],
         }
@@ -59,7 +61,11 @@ impl FftSpace {
         });
     }
 
-    pub fn len(&self) -> usize {
+    pub fn signal_len(&self) -> usize {
+        self.signal_len
+    }
+
+    pub fn padded_len(&self) -> usize {
         self.space.len()
     }
 
