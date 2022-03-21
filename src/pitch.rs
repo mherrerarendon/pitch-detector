@@ -1,6 +1,7 @@
 pub mod autocorrelation;
 pub mod cepstrum;
 pub mod raw_fft;
+mod utils;
 
 use crate::core::fft_space::FftSpace;
 
