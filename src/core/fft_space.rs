@@ -73,6 +73,10 @@ impl FftSpace {
         &self.space
     }
 
+    pub fn signal(&self) -> Box<dyn Iterator<Item = f64> + '_> {
+        Box::new(self.space[..self.signal_len].iter().map(|f| f.re))
+    }
+
     pub fn workspace(&mut self) -> (&mut [Complex<f64>], &mut [Complex<f64>]) {
         (&mut self.space, &mut self.scratch)
     }

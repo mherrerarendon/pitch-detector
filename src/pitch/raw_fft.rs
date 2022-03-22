@@ -1,11 +1,11 @@
 use crate::core::{
-    constants::{MAX_FREQ, MIN_FREQ},
+    constants::{MAX_FREQ, MIN_FREQ, MIN_ZERO_CROSSING_RATE},
     fft_space::FftSpace,
     utils::interpolated_peak_at,
 };
 use rustfft::FftPlanner;
 
-use super::{FftPoint, PitchDetector};
+use super::{utils::zero_crossing_rate, FftPoint, PitchDetector};
 
 pub struct RawFftDetector;
 
@@ -61,6 +61,9 @@ impl RawFftDetector {
 
 impl PitchDetector for RawFftDetector {
     fn detect_with_fft_space(&mut self, sample_rate: f64, fft_space: &mut FftSpace) -> Option<f64> {
+        if zero_crossing_rate(fft_space.signal(), sample_rate) < MIN_ZERO_CROSSING_RATE {
+            return None;
+        }
         let (lower_limit, upper_limit) =
             Self::relevant_fft_range(fft_space.padded_len(), sample_rate);
         Self::detect_unscaled_freq((lower_limit, upper_limit), fft_space).map(|point| {
@@ -107,7 +110,7 @@ mod test_utils {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::test_utils::{test_fundamental_freq, test_sine_wave};
+    use crate::core::test_utils::{test_fundamental_freq, test_signal, test_sine_wave};
 
     #[test]
     fn test_raw_fft() -> anyhow::Result<()> {
@@ -120,6 +123,17 @@ mod tests {
 
         // Fails to detect open C, which should be around 64 Hz
         test_fundamental_freq(&mut detector, "cello_open_c.json", 129.046)?;
+        Ok(())
+    }
+
+    #[test]
+    fn test_noise() -> anyhow::Result<()> {
+        pub const TEST_SAMPLE_RATE: f64 = 44000.0;
+        let signal = test_signal("noise.json")?;
+
+        let mut detector = RawFftDetector;
+        assert!(detector.detect(&signal, TEST_SAMPLE_RATE).is_none());
+
         Ok(())
     }
 
