@@ -5,7 +5,7 @@ use crate::core::{
 };
 use rustfft::FftPlanner;
 
-use super::{utils::zero_crossing_rate, FftPoint, PitchDetector};
+use super::{core::zero_crossing_rate, core::FftPoint, PitchDetector};
 
 pub struct RawFftDetector;
 
@@ -61,7 +61,8 @@ impl RawFftDetector {
 
 impl PitchDetector for RawFftDetector {
     fn detect_with_fft_space(&mut self, sample_rate: f64, fft_space: &mut FftSpace) -> Option<f64> {
-        if zero_crossing_rate(fft_space.signal(), sample_rate) < MIN_ZERO_CROSSING_RATE {
+        let rate = zero_crossing_rate(fft_space.signal(), sample_rate);
+        if rate < MIN_ZERO_CROSSING_RATE || rate > MAX_FREQ * 2. {
             return None;
         }
         let (lower_limit, upper_limit) =
@@ -76,7 +77,7 @@ impl PitchDetector for RawFftDetector {
 mod test_utils {
     use crate::{
         core::{constants::test_utils::RAW_FFT_ALGORITHM, fft_space::FftSpace},
-        pitch::{FftPoint, FrequencyDetectorTest},
+        pitch::{core::FftPoint, FrequencyDetectorTest},
     };
 
     use super::RawFftDetector;

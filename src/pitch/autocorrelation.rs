@@ -4,7 +4,7 @@ use crate::{
 };
 use rustfft::FftPlanner;
 
-use super::{FftPoint, PitchDetector};
+use super::{core::FftPoint, PitchDetector};
 
 pub struct AutocorrelationDetector;
 
@@ -77,7 +77,7 @@ impl PitchDetector for AutocorrelationDetector {
 mod test_utils {
     use crate::{
         core::{constants::test_utils::AUTOCORRELATION_ALGORITHM, fft_space::FftSpace},
-        pitch::{FftPoint, FrequencyDetectorTest},
+        pitch::{core::FftPoint, FrequencyDetectorTest},
     };
 
     use super::AutocorrelationDetector;

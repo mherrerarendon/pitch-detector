@@ -5,7 +5,7 @@ use crate::core::{
 };
 use rustfft::{num_complex::Complex, FftPlanner};
 
-use super::{FftPoint, PitchDetector};
+use super::{core::FftPoint, PitchDetector};
 
 pub struct PowerCepstrum;
 impl PowerCepstrum {
@@ -76,7 +76,7 @@ impl PitchDetector for PowerCepstrum {
 mod test_utils {
     use crate::{
         core::{constants::test_utils::POWER_CEPSTRUM_ALGORITHM, fft_space::FftSpace},
-        pitch::{FftPoint, FrequencyDetectorTest},
+        pitch::{core::FftPoint, FrequencyDetectorTest},
     };
 
     use super::PowerCepstrum;
