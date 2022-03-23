@@ -7,6 +7,8 @@ use crate::{core::utils::sine_wave_signal, pitch::PitchDetector};
 
 use super::utils::audio_buffer_to_signal;
 
+// All test files have a buffer size of 17,600 samples, and a sample rate of 44,000 Hz.
+
 #[derive(Deserialize)]
 pub struct SampleData {
     pub data: Option<Vec<u8>>,

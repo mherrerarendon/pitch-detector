@@ -1,9 +1,11 @@
 pub mod autocorrelation;
 pub mod cepstrum;
+pub mod core;
 pub mod raw_fft;
-mod utils;
 
 use crate::core::fft_space::FftSpace;
+
+use self::core::FftPoint;
 
 pub trait PitchDetector {
     fn detect(&mut self, signal: &[f64], sample_rate: f64) -> Option<f64>
@@ -14,18 +16,6 @@ where {
     }
 
     fn detect_with_fft_space(&mut self, sample_rate: f64, fft_space: &mut FftSpace) -> Option<f64>;
-}
-
-#[derive(Debug, Clone, PartialEq, PartialOrd)]
-pub struct FftPoint {
-    pub x: f64,
-    pub y: f64,
-}
-
-impl Default for FftPoint {
-    fn default() -> Self {
-        Self { x: 0.0, y: 0.0 }
-    }
 }
 
 #[cfg(feature = "test_utils")]

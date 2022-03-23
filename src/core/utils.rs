@@ -1,6 +1,6 @@
 use fitting::gaussian::fit;
 
-use crate::pitch::FftPoint;
+use crate::pitch::core::FftPoint;
 
 pub fn sine_wave_signal(num_samples: usize, freq: f64, sample_rate: f64) -> Vec<f64> {
     (0..num_samples)
