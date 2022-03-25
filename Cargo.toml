@@ -12,7 +12,9 @@ categories = ["multimedia::audio"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 exclude = [
-    "test_data/results/*",
+    "test_data/*",
+    ".github/*",
+    ".vscode/*",
 ]
 
 [lib]
