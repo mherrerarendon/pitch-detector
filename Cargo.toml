@@ -2,8 +2,18 @@
 name = "pitch-detector"
 version = "0.1.0"
 edition = "2021"
+license = "MIT"
+description = "A frequency and pitch detector library written in Rust."
+repository = "https://github.com/mherrerarendon/pitch-detector"
+readme = "README.md"
+keywords = ["pitch", "detection", "frequency", "note"] 
+categories = ["multimedia::audio"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+exclude = [
+    "test_data/results/*",
+]
 
 [lib]
 name = "pitch_detector"
