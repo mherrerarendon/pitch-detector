@@ -1,5 +1,8 @@
+#![feature(iterator_try_reduce)]
+
 use anyhow::Result;
 use float_cmp::ApproxEq;
+use num_traits::Float;
 use pitch_detector::{
     core::{fft_space::FftSpace, utils::sine_wave_signal},
     pitch::{raw_fft::RawFftDetector, PitchDetector},
@@ -44,8 +47,28 @@ fn example_detect_frequency_reduced_alloc() -> Result<()> {
     Ok(())
 }
 
+fn fitting_bug() -> Result<()> {
+    let y_vals = vec![-1., 1., -1.];
+    let sum_y_pow2: f64 = y_vals.iter().map(|y| y.powi(2)).sum();
+    let sum_y_pow2: f64 = y_vals
+        .into_iter()
+        .try_fold(0.0_f64, |accum, elem| {
+            if elem.is_sign_positive() {
+                Some(accum + elem.powi(2))
+            } else {
+                None
+            }
+        })
+        .ok_or(anyhow::anyhow!("No sum"))?;
+    // .ok_or(anyhow::anyhow!("No sum"))?;
+    let (mu, _, a) = fitting::gaussian::fit(vec![1., 2., 3.].into(), vec![-1., 1., -1.].into())?;
+    assert_eq!(mu, f64::NAN);
+    Ok(())
+}
+
 fn main() -> Result<()> {
     example_detect_frequency()?;
     example_detect_frequency_reduced_alloc()?;
+    fitting_bug()?;
     Ok(())
 }
