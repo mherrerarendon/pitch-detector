@@ -73,28 +73,49 @@ impl PitchDetector for RawFftDetector {
     }
 }
 
-#[cfg(feature = "test_utils")]
-mod test_utils {
+#[cfg(feature = "hinted")]
+mod hinted {
     use crate::{
-        core::{constants::test_utils::RAW_FFT_ALGORITHM, fft_space::FftSpace},
-        pitch::{core::FftPoint, FrequencyDetectorTest},
+        core::fft_space::FftSpace,
+        hinted::{peak_detector::ZScoreDetector, HintedNoteDetector},
     };
 
     use super::RawFftDetector;
 
-    impl FrequencyDetectorTest for RawFftDetector {
-        fn unscaled_spectrum(&self, signal: &[f64], fft_range: (usize, usize)) -> Vec<f64> {
+    impl HintedNoteDetector for RawFftDetector {
+        fn unscaled_candidates(
+            &mut self,
+            signal: &[f64],
+            sample_rate: f64,
+            fft_space: &mut FftSpace,
+        ) -> Vec<(f64, f64)> {
+            let peak_detector = ZScoreDetector::new(fft_space.padded_len() / 2, 0.1, 0.1);
+        }
+    }
+}
+
+#[cfg(feature = "test_utils")]
+mod test_utils {
+    use crate::{
+        core::{constants::test_utils::RAW_FFT_ALGORITHM, fft_space::FftSpace},
+        pitch::{core::FftPoint, FftBinData},
+    };
+
+    use super::RawFftDetector;
+
+    impl FftBinData for RawFftDetector {
+        fn calc_bin_magnitudes(&self, signal: &[f64], fft_range: (usize, usize)) -> Vec<f64> {
             let mut fft_space = FftSpace::new(signal.len());
             fft_space.init_with_signal(signal);
             Self::process_fft(&mut fft_space);
             Self::unscaled_spectrum(&fft_space, fft_range).collect()
         }
 
-        fn relevant_fft_range(&self, fft_space_len: usize, sample_rate: f64) -> (usize, usize) {
+        fn relevant_bin_range(&self, fft_space_len: usize, sample_rate: f64) -> (usize, usize) {
             Self::relevant_fft_range(fft_space_len, sample_rate)
         }
 
-        fn detect_unscaled_freq_with_space(
+        fn detect_max_bin_with_fft_space(
             &mut self,
             fft_range: (usize, usize),
             fft_space: &mut FftSpace,

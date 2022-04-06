@@ -4,6 +4,21 @@ use itertools::Itertools;
 use num_traits::signum;
 
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
+pub struct FftBin {
+    pub bin: usize,
+    pub magnitude: f64,
+}
+
+impl Default for FftBin {
+    fn default() -> Self {
+        Self {
+            bin: 0,
+            magnitude: 0.0,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub struct FftPoint {
     pub x: f64,
     pub y: f64,
@@ -12,6 +27,15 @@ pub struct FftPoint {
 impl Default for FftPoint {
     fn default() -> Self {
         Self { x: 0.0, y: 0.0 }
+    }
+}
+
+impl From<FftBin> for FftPoint {
+    fn from(bin: FftBin) -> Self {
+        Self {
+            x: bin.bin as f64,
+            y: bin.magnitude,
+        }
     }
 }
 

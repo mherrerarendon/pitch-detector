@@ -2,7 +2,7 @@ use pitch_detector::{
     core::{fft_space::FftSpace, test_utils::test_signal, utils::sine_wave_signal},
     pitch::{
         autocorrelation::AutocorrelationDetector, cepstrum::PowerCepstrum, raw_fft::RawFftDetector,
-        FrequencyDetectorTest, PitchDetector,
+        FftBinData, PitchDetector,
     },
 };
 use plotters::prelude::*;
@@ -17,7 +17,7 @@ fn plot<D>(
     fft_x: f64,
 ) -> anyhow::Result<()>
 where
-    D: PitchDetector + FrequencyDetectorTest,
+    D: PitchDetector + FftBinData,
 {
     let plot_title = format!("{} - {} - {:.2} fft_x", detector.name(), plot_name, fft_x);
     let output_file = format!(
@@ -26,7 +26,7 @@ where
         format!("{} - {}", detector.name(), plot_name)
     );
 
-    let y_vals: Vec<f64> = detector.unscaled_spectrum(signal, fft_range);
+    let y_vals: Vec<f64> = detector.calc_bin_magnitudes(signal, fft_range);
     let x_vals: Vec<f64> = (0..y_vals.len()).map(|x| x as f64).collect();
     assert_eq!(
         x_vals.len(),
@@ -60,7 +60,7 @@ where
     Ok(())
 }
 
-fn plot_detector_for_files<D: PitchDetector + FrequencyDetectorTest>(
+fn plot_detector_for_files<D: PitchDetector + FftBinData>(
     mut detector: D,
     test_files: &[&str],
 ) -> anyhow::Result<()> {
@@ -68,9 +68,9 @@ fn plot_detector_for_files<D: PitchDetector + FrequencyDetectorTest>(
         let test_signal = test_signal(test_file)?;
         let mut fft_space = FftSpace::new(test_signal.len());
         fft_space.init_with_signal(test_signal.iter());
-        let fft_range = detector.relevant_fft_range(fft_space.padded_len(), TEST_FILE_SAMPLE_RATE);
+        let fft_range = detector.relevant_bin_range(fft_space.padded_len(), TEST_FILE_SAMPLE_RATE);
         let fft_point_x = detector
-            .detect_unscaled_freq_with_space(fft_range, &mut fft_space)
+            .detect_max_bin_with_fft_space(fft_range, &mut fft_space)
             .map(|p| p.x)
             .ok_or(anyhow::anyhow!(""))?;
         plot(&detector, &test_signal, fft_range, test_file, fft_point_x)?;
@@ -78,7 +78,7 @@ fn plot_detector_for_files<D: PitchDetector + FrequencyDetectorTest>(
     Ok(())
 }
 
-fn plot_detector_for_freq<D: PitchDetector + FrequencyDetectorTest>(
+fn plot_detector_for_freq<D: PitchDetector + FftBinData>(
     mut detector: D,
     freq: f64,
 ) -> anyhow::Result<()> {
@@ -87,9 +87,9 @@ fn plot_detector_for_freq<D: PitchDetector + FrequencyDetectorTest>(
     let test_signal = sine_wave_signal(NUM_SAMPLES, freq, TEST_FILE_SAMPLE_RATE);
     let mut fft_space = FftSpace::new(test_signal.len());
     fft_space.init_with_signal(test_signal.iter());
-    let fft_range = detector.relevant_fft_range(fft_space.padded_len(), TEST_FILE_SAMPLE_RATE);
+    let fft_range = detector.relevant_bin_range(fft_space.padded_len(), TEST_FILE_SAMPLE_RATE);
     let fft_point_x = detector
-        .detect_unscaled_freq_with_space(fft_range, &mut fft_space)
+        .detect_max_bin_with_fft_space(fft_range, &mut fft_space)
         .map(|p| p.x)
         .ok_or(anyhow::anyhow!(
             "Failed to detect unscaled frequency with space"
