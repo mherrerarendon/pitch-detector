@@ -1,29 +1,25 @@
 use std::ops::Range;
 
-use crate::core::{
-    constants::{MAX_FREQ, MIN_FREQ, MIN_ZERO_CROSSING_RATE, RAW_FFT_ALGORITHM},
-    fft_space::FftSpace,
-    utils::interpolated_peak_at,
-};
+use crate::core::fft_space::FftSpace;
 use crate::pitch::SignalToSpectrum;
 use rustfft::FftPlanner;
 
-use super::{core::zero_crossing_rate, core::FftPoint, PitchDetector};
+use super::PitchDetector;
 
 #[derive(Debug, Clone)]
-pub struct RawFftDetector {
+pub struct HannedFftDetector {
     fft_space: Option<FftSpace>,
 }
 
-impl PitchDetector for RawFftDetector {}
+impl PitchDetector for HannedFftDetector {}
 
-impl Default for RawFftDetector {
+impl Default for HannedFftDetector {
     fn default() -> Self {
         Self { fft_space: None }
     }
 }
 
-impl RawFftDetector {
+impl HannedFftDetector {
     fn unscaled_spectrum(&self, bin_range: (usize, usize)) -> Box<dyn Iterator<Item = f64> + '_> {
         if let Some(ref fft_space) = self.fft_space {
             let (lower_limit, upper_limit) = bin_range;
@@ -56,28 +52,7 @@ impl RawFftDetector {
     }
 }
 
-// #[cfg(feature = "hinted")]
-// mod hinted {
-//     use crate::{
-//         core::fft_space::FftSpace,
-//         hinted::{peak_detector::ZScoreDetector, HintedNoteDetector},
-//     };
-
-//     use super::RawFftDetector;
-
-//     impl HintedNoteDetector for RawFftDetector {
-//         fn unscaled_candidates(
-//             &mut self,
-//             signal: &[f64],
-//             sample_rate: f64,
-//             fft_space: &mut FftSpace,
-//         ) -> Vec<(f64, f64)> {
-//             let peak_detector = ZScoreDetector::new(fft_space.padded_len() / 2, 0.1, 0.1);
-//         }
-//     }
-// }
-
-impl SignalToSpectrum for RawFftDetector {
+impl SignalToSpectrum for HannedFftDetector {
     fn signal_to_spectrum(
         &mut self,
         signal: &[f64],
@@ -115,7 +90,7 @@ impl SignalToSpectrum for RawFftDetector {
     }
 
     fn name(&self) -> &'static str {
-        RAW_FFT_ALGORITHM
+        "rawfft"
     }
 }
 #[cfg(test)]
@@ -125,7 +100,7 @@ mod tests {
 
     #[test]
     fn test_raw_fft() -> anyhow::Result<()> {
-        let mut detector = RawFftDetector::default();
+        let mut detector = HannedFftDetector::default();
 
         test_fundamental_freq(&mut detector, "tuner_c5.json", 523.242)?;
         test_fundamental_freq(&mut detector, "cello_open_a.json", 219.383)?;
@@ -142,15 +117,17 @@ mod tests {
         pub const TEST_SAMPLE_RATE: f64 = 44000.0;
         let signal = test_signal("noise.json")?;
 
-        let mut detector = RawFftDetector::default();
-        assert!(detector.detect(&signal, TEST_SAMPLE_RATE, None).is_none());
+        let mut detector = HannedFftDetector::default();
+        assert!(detector
+            .detect_pitch(&signal, TEST_SAMPLE_RATE, None)
+            .is_none());
 
         Ok(())
     }
 
     #[test]
     fn test_raw_fft_sine() -> anyhow::Result<()> {
-        let mut detector = RawFftDetector::default();
+        let mut detector = HannedFftDetector::default();
         test_sine_wave(&mut detector, 440.)?;
         Ok(())
     }

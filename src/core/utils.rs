@@ -1,6 +1,6 @@
 use fitting::gaussian::fit;
 
-use crate::pitch::core::FftPoint;
+use super::FftPoint;
 
 pub fn sine_wave_signal(num_samples: usize, freq: f64, sample_rate: f64) -> Vec<f64> {
     (0..num_samples)
@@ -8,17 +8,15 @@ pub fn sine_wave_signal(num_samples: usize, freq: f64, sample_rate: f64) -> Vec<
         .collect()
 }
 
-pub fn audio_buffer_to_samples(byte_buffer: &[u8]) -> Vec<i16> {
-    byte_buffer
-        .chunks_exact(2)
-        .map(|a| i16::from_ne_bytes([a[0], a[1]]))
-        .collect()
+pub fn audio_buffer_to_samples(byte_buffer: &[u8]) -> Box<dyn Iterator<Item = i16> + '_> {
+    Box::new(
+        byte_buffer
+            .chunks_exact(2)
+            .map(|a| i16::from_ne_bytes([a[0], a[1]])),
+    )
 }
-pub fn audio_buffer_to_signal(byte_buffer: &[u8]) -> Vec<f64> {
-    audio_buffer_to_samples(byte_buffer)
-        .into_iter()
-        .map(|x| x as f64)
-        .collect()
+pub fn audio_buffer_to_signal(byte_buffer: &[u8]) -> Box<dyn Iterator<Item = f64> + '_> {
+    Box::new(audio_buffer_to_samples(byte_buffer).map(|x| x as f64))
 }
 
 pub fn interpolated_peak_at(spectrum: &[f64], fft_point_x: usize) -> Option<FftPoint> {

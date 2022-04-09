@@ -1,18 +1,16 @@
 pub mod cepstrum;
 pub mod core;
-pub mod raw_fft;
+pub mod hanned_fft;
 
 // autocorrelation doesn't work well enough yet.
 // pub mod autocorrelation;
 
 use std::ops::Range;
 
-use crate::core::utils::interpolated_peak_at;
-
-use self::core::FftPoint;
+use crate::core::{utils::interpolated_peak_at, FftPoint};
 
 pub trait PitchDetector: SignalToSpectrum {
-    fn detect(
+    fn detect_pitch(
         &mut self,
         signal: &[f64],
         sample_rate: f64,

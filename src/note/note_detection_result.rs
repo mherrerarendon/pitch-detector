@@ -1,10 +1,6 @@
-use crate::{
-    core::{
-        constants::{A4_FREQ, MAX_CENTS_OFFSET, MIN_FREQ, NOTES},
-        fft_space::FftSpace,
-        NoteName,
-    },
-    pitch::PitchDetector,
+use crate::core::{
+    constants::{A4_FREQ, MAX_CENTS_OFFSET, MIN_FREQ, NOTES},
+    NoteName,
 };
 
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
@@ -45,30 +41,11 @@ impl TryFrom<f64> for NoteDetectionResult {
     }
 }
 
-pub fn detect<D>(
-    signal: &[f64],
-    freq_detector: &mut D,
-    sample_rate: f64,
-) -> Option<NoteDetectionResult>
-where
-    D: PitchDetector,
-{
-    freq_detector
-        .detect(signal, sample_rate)
-        .and_then(|f| f.try_into().ok())
-}
-
-pub fn detect_with_fft_space<D>(
-    freq_detector: &mut D,
-    sample_rate: f64,
-    fft_space: &mut FftSpace,
-) -> Option<NoteDetectionResult>
-where
-    D: PitchDetector,
-{
-    freq_detector
-        .detect_with_fft_space(sample_rate, fft_space)
-        .and_then(|f| f.try_into().ok())
+impl TryFrom<usize> for NoteDetectionResult {
+    type Error = anyhow::Error;
+    fn try_from(bin: usize) -> Result<Self, Self::Error> {
+        (bin as f64).try_into()
+    }
 }
 
 #[cfg(test)]

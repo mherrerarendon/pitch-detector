@@ -80,3 +80,45 @@ impl fmt::Display for NoteName {
         }
     }
 }
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct FftBin {
+    pub bin: usize,
+    pub magnitude: f64,
+}
+
+impl Default for FftBin {
+    fn default() -> Self {
+        Self {
+            bin: 0,
+            magnitude: 0.0,
+        }
+    }
+}
+
+impl PartialOrd for FftBin {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        self.magnitude.partial_cmp(&other.magnitude)
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, PartialOrd)]
+pub struct FftPoint {
+    pub x: f64,
+    pub y: f64,
+}
+
+impl Default for FftPoint {
+    fn default() -> Self {
+        Self { x: 0.0, y: 0.0 }
+    }
+}
+
+impl From<FftBin> for FftPoint {
+    fn from(bin: FftBin) -> Self {
+        Self {
+            x: bin.bin as f64,
+            y: bin.magnitude,
+        }
+    }
+}

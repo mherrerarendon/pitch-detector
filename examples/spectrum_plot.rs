@@ -1,8 +1,10 @@
 use std::ops::Range;
 
 use pitch_detector::{
-    core::{fft_space::FftSpace, test_utils::test_signal, utils::sine_wave_signal},
-    pitch::{cepstrum::PowerCepstrum, raw_fft::RawFftDetector, PitchDetector, SignalToSpectrum},
+    core::{test_utils::test_signal, utils::sine_wave_signal},
+    pitch::{
+        cepstrum::PowerCepstrum, hanned_fft::HannedFftDetector, PitchDetector, SignalToSpectrum,
+    },
 };
 use plotters::prelude::*;
 
@@ -21,7 +23,7 @@ where
     D: PitchDetector + SignalToSpectrum,
 {
     let max_freq = detector
-        .detect(signal, sample_rate, Some(freq_range.clone()))
+        .detect_pitch(signal, sample_rate, Some(freq_range.clone()))
         .ok_or(anyhow::anyhow!("No pitch"))?;
     let max_bin = detector.freq_to_bin(max_freq, sample_rate);
     let plot_title = format!(
@@ -113,14 +115,13 @@ fn main() -> anyhow::Result<()> {
         "tuner_c5.json",
         // "noise.json",
     ];
-    // I'm not sure why the raw fft x values look wrong in the plot.
 
     // plot_detector_for_files(AutocorrelationDetector, &test_files)?;
     plot_detector_for_files(PowerCepstrum::default(), &test_files)?;
-    plot_detector_for_files(RawFftDetector::default(), &test_files)?;
+    plot_detector_for_files(HannedFftDetector::default(), &test_files)?;
 
     // plot_detector_for_freq(AutocorrelationDetector, 440.)?;
     // plot_detector_for_freq(PowerCepstrum, 440.)?;
-    plot_detector_for_freq(RawFftDetector::default(), 440.)?;
+    plot_detector_for_freq(HannedFftDetector::default(), 440.)?;
     Ok(())
 }

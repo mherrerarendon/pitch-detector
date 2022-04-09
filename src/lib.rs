@@ -1,5 +1,3 @@
 pub mod core;
+pub mod note;
 pub mod pitch;
-
-// #[cfg(feature = "hinted")]
-// pub mod hinted;
