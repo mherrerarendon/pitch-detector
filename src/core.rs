@@ -23,25 +23,6 @@ pub enum NoteName {
     GSharp,
 }
 
-impl NoteName {
-    fn base_freq(&self) -> f64 {
-        match self {
-            NoteName::A => 25.50,
-            NoteName::ASharp => 29.14,
-            NoteName::B => 30.87,
-            NoteName::C => 32.70,
-            NoteName::CSharp => 34.65,
-            NoteName::D => 36.71,
-            NoteName::DSharp => 38.89,
-            NoteName::E => 41.20,
-            NoteName::F => 43.65,
-            NoteName::FSharp => 46.25,
-            NoteName::G => 49.00,
-            NoteName::GSharp => 51.91,
-        }
-    }
-}
-
 impl From<&str> for NoteName {
     fn from(s: &str) -> Self {
         match s {

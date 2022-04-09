@@ -9,17 +9,13 @@ use crate::{
 use super::note_detection_result::NoteDetectionResult;
 
 pub trait HintedNoteDetector: SignalToSpectrum {
-    fn detect_note_with_hint<I>(
+    fn detect_note_with_hint(
         &mut self,
         note_hint: NoteName,
         signal: &[f64],
         sample_rate: f64,
         freq_range_hint: Option<Range<f64>>,
-    ) -> Option<NoteDetectionResult>
-    where
-        I: IntoIterator,
-        <I as IntoIterator>::Item: std::borrow::Borrow<f64>,
-    {
+    ) -> Option<NoteDetectionResult> {
         let (start_bin, spectrum) =
             self.signal_to_spectrum(signal, freq_range_hint.map(|r| (r, sample_rate)));
         const LAG: usize = 40;
