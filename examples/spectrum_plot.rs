@@ -1,33 +1,45 @@
+use std::ops::Range;
+
 use pitch_detector::{
     core::{fft_space::FftSpace, test_utils::test_signal, utils::sine_wave_signal},
-    pitch::{
-        autocorrelation::AutocorrelationDetector, cepstrum::PowerCepstrum, raw_fft::RawFftDetector,
-        PitchDetector, SignalToSpectrum,
-    },
+    pitch::{cepstrum::PowerCepstrum, raw_fft::RawFftDetector, PitchDetector, SignalToSpectrum},
 };
 use plotters::prelude::*;
 
 const TEST_FILE_SAMPLE_RATE: f64 = 44000.;
+pub const MAX_FREQ: f64 = 1046.50; // C6
+pub const MIN_FREQ: f64 = 32.7; // C1
 
 fn plot<D>(
-    detector: &D,
+    detector: &mut D,
     signal: &[f64],
-    fft_range: (usize, usize),
+    freq_range: Range<f64>,
+    sample_rate: f64,
     plot_name: &str,
-    fft_x: f64,
 ) -> anyhow::Result<()>
 where
     D: PitchDetector + SignalToSpectrum,
 {
-    let plot_title = format!("{} - {} - {:.2} fft_x", detector.name(), plot_name, fft_x);
+    let max_freq = detector
+        .detect(signal, sample_rate, Some(freq_range.clone()))
+        .ok_or(anyhow::anyhow!("No pitch"))?;
+    let max_bin = detector.freq_to_bin(max_freq, sample_rate);
+    let plot_title = format!(
+        "{} - {} - {:.2} max bin",
+        detector.name(),
+        plot_name,
+        max_bin
+    );
     let output_file = format!(
         "{}/test_data/results/{}.png",
         env!("CARGO_MANIFEST_DIR"),
         format!("{} - {}", detector.name(), plot_name)
     );
 
-    let y_vals: Vec<f64> = detector.signal_to_spectrum(signal, fft_range);
-    let x_vals: Vec<f64> = (0..y_vals.len()).map(|x| x as f64).collect();
+    let (start_bin, y_vals) = detector.signal_to_spectrum(signal, Some((freq_range, sample_rate)));
+    let x_vals: Vec<f64> = (start_bin..y_vals.len() + start_bin)
+        .map(|x| x as f64)
+        .collect();
     assert_eq!(
         x_vals.len(),
         y_vals.len(),
@@ -66,14 +78,13 @@ fn plot_detector_for_files<D: PitchDetector + SignalToSpectrum>(
 ) -> anyhow::Result<()> {
     for test_file in test_files {
         let test_signal = test_signal(test_file)?;
-        let mut fft_space = FftSpace::new(test_signal.len());
-        fft_space.init_with_signal(test_signal.iter());
-        let fft_range = detector.relevant_bin_range(fft_space.padded_len(), TEST_FILE_SAMPLE_RATE);
-        let fft_point_x = detector
-            .detect_max_bin_with_fft_space(fft_range, &mut fft_space)
-            .map(|p| p.x)
-            .ok_or(anyhow::anyhow!(""))?;
-        plot(&detector, &test_signal, fft_range, test_file, fft_point_x)?;
+        plot(
+            &mut detector,
+            &test_signal,
+            MIN_FREQ..MAX_FREQ,
+            TEST_FILE_SAMPLE_RATE,
+            test_file,
+        )?;
     }
     Ok(())
 }
@@ -85,17 +96,13 @@ fn plot_detector_for_freq<D: PitchDetector + SignalToSpectrum>(
     const TEST_FILE_SAMPLE_RATE: f64 = 44100.;
     const NUM_SAMPLES: usize = 16384;
     let test_signal = sine_wave_signal(NUM_SAMPLES, freq, TEST_FILE_SAMPLE_RATE);
-    let mut fft_space = FftSpace::new(test_signal.len());
-    fft_space.init_with_signal(test_signal.iter());
-    let fft_range = detector.relevant_bin_range(fft_space.padded_len(), TEST_FILE_SAMPLE_RATE);
-    let fft_point_x = detector
-        .detect_max_bin_with_fft_space(fft_range, &mut fft_space)
-        .map(|p| p.x)
-        .ok_or(anyhow::anyhow!(
-            "Failed to detect unscaled frequency with space"
-        ))?;
-    plot(&detector, &test_signal, fft_range, "A440", fft_point_x)?;
-    Ok(())
+    plot(
+        &mut detector,
+        &test_signal,
+        MIN_FREQ..MAX_FREQ,
+        TEST_FILE_SAMPLE_RATE,
+        "A440",
+    )
 }
 fn main() -> anyhow::Result<()> {
     let test_files = [
@@ -108,12 +115,12 @@ fn main() -> anyhow::Result<()> {
     ];
     // I'm not sure why the raw fft x values look wrong in the plot.
 
-    plot_detector_for_files(AutocorrelationDetector, &test_files)?;
-    plot_detector_for_files(PowerCepstrum, &test_files)?;
-    plot_detector_for_files(RawFftDetector, &test_files)?;
+    // plot_detector_for_files(AutocorrelationDetector, &test_files)?;
+    plot_detector_for_files(PowerCepstrum::default(), &test_files)?;
+    plot_detector_for_files(RawFftDetector::default(), &test_files)?;
 
-    plot_detector_for_freq(AutocorrelationDetector, 440.)?;
+    // plot_detector_for_freq(AutocorrelationDetector, 440.)?;
     // plot_detector_for_freq(PowerCepstrum, 440.)?;
-    plot_detector_for_freq(RawFftDetector, 440.)?;
+    plot_detector_for_freq(RawFftDetector::default(), 440.)?;
     Ok(())
 }

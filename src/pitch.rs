@@ -1,11 +1,13 @@
-// pub mod autocorrelation;
 pub mod cepstrum;
 pub mod core;
 pub mod raw_fft;
 
+// autocorrelation doesn't work well enough yet.
+// pub mod autocorrelation;
+
 use std::ops::Range;
 
-use crate::core::{fft_space::FftSpace, utils::interpolated_peak_at};
+use crate::core::utils::interpolated_peak_at;
 
 use self::core::FftPoint;
 
@@ -46,17 +48,4 @@ pub trait SignalToSpectrum {
     fn freq_to_bin(&self, freq: f64, sample_rate: f64) -> f64;
 
     fn name(&self) -> &'static str;
-    // fn relevant_bin_range(&self, fft_space_len: usize, sample_rate: f64) -> (usize, usize);
-
-    // fn detect_max_bin(&mut self, signal: &[f64], bin_range: (usize, usize)) -> Option<FftPoint> {
-    //     let mut fft_space = FftSpace::new(signal.len());
-    //     fft_space.init_with_signal(signal);
-    //     self.detect_max_bin_with_fft_space(bin_range, &mut fft_space)
-    // }
-
-    // fn detect_max_bin_with_fft_space(
-    //     &mut self,
-    //     bin_range: (usize, usize),
-    //     fft_space: &mut FftSpace,
-    // ) -> Option<FftPoint>;
 }
