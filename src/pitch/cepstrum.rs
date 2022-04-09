@@ -1,109 +1,88 @@
-use crate::core::{
-    constants::{MAX_FREQ, MIN_FREQ},
-    fft_space::FftSpace,
-    utils::interpolated_peak_at,
-};
+use std::ops::Range;
+
+use crate::core::fft_space::FftSpace;
 use rustfft::{num_complex::Complex, FftPlanner};
 
-use super::{core::FftPoint, PitchDetector};
+use super::{PitchDetector, SignalToSpectrum};
 
-pub struct PowerCepstrum;
+pub struct PowerCepstrum {
+    fft_space: Option<FftSpace>,
+}
+
+impl PitchDetector for PowerCepstrum {}
+
+impl Default for PowerCepstrum {
+    fn default() -> Self {
+        Self { fft_space: None }
+    }
+}
+
 impl PowerCepstrum {
-    fn relevant_fft_range(sample_rate: f64) -> (usize, usize) {
-        // Frequency = SAMPLE_RATE / quefrency
-        // With this in mind we can ignore the extremes of the power cepstrum
-        // https://en.wikipedia.org/wiki/Cepstrum
-        let lower_limit = (sample_rate / MAX_FREQ).round() as usize;
-        let upper_limit = (sample_rate / MIN_FREQ).round() as usize;
-        (lower_limit, upper_limit)
+    fn unscaled_spectrum(&self, bin_range: (usize, usize)) -> Box<dyn Iterator<Item = f64> + '_> {
+        if let Some(ref fft_space) = self.fft_space {
+            let (lower_limit, upper_limit) = bin_range;
+            Box::new(
+                fft_space
+                    .freq_domain(false)
+                    .skip(lower_limit)
+                    .take(upper_limit - lower_limit)
+                    .map(|(amplitude, _)| amplitude),
+            )
+        } else {
+            panic!("FFT space not initialized");
+        }
     }
 
-    fn unscaled_spectrum(
-        fft_space: &FftSpace,
-        fft_range: (usize, usize),
-    ) -> Box<dyn Iterator<Item = f64> + '_> {
-        let (lower_limit, upper_limit) = fft_range;
-        Box::new(
-            fft_space
-                .freq_domain(false)
-                .skip(lower_limit)
-                .take(upper_limit - lower_limit)
-                .map(|(amplitude, _)| amplitude),
-        )
-    }
+    fn process_fft(&mut self) {
+        if let Some(ref mut fft_space) = self.fft_space {
+            let mut planner = FftPlanner::new();
+            let forward_fft = planner.plan_fft_forward(fft_space.padded_len());
 
-    fn process_fft(fft_space: &mut FftSpace) {
-        let mut planner = FftPlanner::new();
-        let forward_fft = planner.plan_fft_forward(fft_space.padded_len());
-
-        let (space, scratch) = fft_space.workspace();
-        forward_fft.process_with_scratch(space, scratch);
-        fft_space.map(|f| Complex::new(f.norm_sqr().log(std::f64::consts::E), 0.0));
-        let (space, scratch) = fft_space.workspace();
-        let inverse_fft = planner.plan_fft_inverse(space.len());
-        inverse_fft.process_with_scratch(space, scratch);
-    }
-
-    fn detect_unscaled_freq(
-        fft_range: (usize, usize),
-        fft_space: &mut FftSpace,
-    ) -> Option<FftPoint> {
-        Self::process_fft(fft_space);
-        let unscaled_spectrum: Vec<f64> = Self::unscaled_spectrum(fft_space, fft_range).collect();
-        let fft_point = unscaled_spectrum
-            .iter()
-            .enumerate()
-            .reduce(|accum, quefrency| {
-                if quefrency.1 > accum.1 {
-                    quefrency
-                } else {
-                    accum
-                }
-            })?;
-        interpolated_peak_at(&unscaled_spectrum, fft_point.0)
+            let (space, scratch) = fft_space.workspace();
+            forward_fft.process_with_scratch(space, scratch);
+            fft_space.map(|f| Complex::new(f.norm_sqr().log(std::f64::consts::E), 0.0));
+            let (space, scratch) = fft_space.workspace();
+            let inverse_fft = planner.plan_fft_inverse(space.len());
+            inverse_fft.process_with_scratch(space, scratch);
+        } else {
+            panic!("FFT space not initialized");
+        }
     }
 }
 
-impl PitchDetector for PowerCepstrum {
-    fn detect_with_fft_space(&mut self, sample_rate: f64, fft_space: &mut FftSpace) -> Option<f64> {
-        let (lower_limit, upper_limit) = Self::relevant_fft_range(sample_rate);
-        Self::detect_unscaled_freq((lower_limit, upper_limit), fft_space)
-            .map(|point| sample_rate / (lower_limit as f64 + point.x))
+impl SignalToSpectrum for PowerCepstrum {
+    fn signal_to_spectrum(
+        &mut self,
+        signal: &[f64],
+        freq_range: Option<(Range<f64>, f64)>,
+    ) -> (usize, Vec<f64>) {
+        if self.fft_space.is_none() {
+            self.fft_space = Some(FftSpace::new(signal.len()));
+        }
+        self.fft_space.as_mut().unwrap().init_with_signal(signal);
+        self.process_fft();
+        let bin_range = match freq_range {
+            Some((r, sample_rate)) => (
+                self.freq_to_bin(r.end, sample_rate).round() as usize,
+                self.freq_to_bin(r.start, sample_rate).round() as usize,
+            ),
+            // Nyquist limit in this case is 3
+            // The second half of a traditional fft corresponds to the first 2 bins (I think?)
+            // Conventionally, only the first half of the traditional fft is relevant.
+            None => (3, signal.len()),
+        };
+        (bin_range.0, self.unscaled_spectrum(bin_range).collect())
     }
-}
 
-#[cfg(feature = "test_utils")]
-mod test_utils {
-    use crate::{
-        core::{constants::test_utils::POWER_CEPSTRUM_ALGORITHM, fft_space::FftSpace},
-        pitch::{core::FftPoint, FrequencyDetectorTest},
-    };
+    fn bin_to_freq(&self, bin: f64, sample_rate: f64) -> f64 {
+        sample_rate / bin
+    }
+    fn freq_to_bin(&self, freq: f64, sample_rate: f64) -> f64 {
+        sample_rate / freq
+    }
 
-    use super::PowerCepstrum;
-
-    impl FrequencyDetectorTest for PowerCepstrum {
-        fn unscaled_spectrum(&self, signal: &[f64], fft_range: (usize, usize)) -> Vec<f64> {
-            let mut fft_space = FftSpace::new(signal.len());
-            fft_space.init_with_signal(signal);
-            Self::process_fft(&mut fft_space);
-            Self::unscaled_spectrum(&fft_space, fft_range).collect()
-        }
-
-        fn relevant_fft_range(&self, _fft_space_len: usize, sample_rate: f64) -> (usize, usize) {
-            Self::relevant_fft_range(sample_rate)
-        }
-
-        fn detect_unscaled_freq_with_space(
-            &mut self,
-            fft_range: (usize, usize),
-            fft_space: &mut FftSpace,
-        ) -> Option<FftPoint> {
-            Self::detect_unscaled_freq(fft_range, fft_space)
-        }
-
-        fn name(&self) -> &'static str {
-            POWER_CEPSTRUM_ALGORITHM
-        }
+    fn name(&self) -> &'static str {
+        "power"
     }
 }
 
@@ -114,7 +93,7 @@ mod tests {
 
     #[test]
     fn test_power() -> anyhow::Result<()> {
-        let mut detector = PowerCepstrum;
+        let mut detector = PowerCepstrum::default();
 
         test_fundamental_freq(&mut detector, "cello_open_a.json", 219.418)?;
         test_fundamental_freq(&mut detector, "cello_open_d.json", 146.730)?;

@@ -32,6 +32,8 @@ mod utils {
         }
     }
 }
+
+#[derive(Debug, Clone)]
 pub struct FftSpace {
     signal_len: usize,
     space: Vec<Complex<f64>>,

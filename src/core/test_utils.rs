@@ -3,7 +3,13 @@ use float_cmp::ApproxEq;
 use serde::Deserialize;
 use std::fs;
 
-use crate::{core::utils::sine_wave_signal, pitch::PitchDetector};
+use crate::{
+    core::{
+        constants::{MAX_FREQ, MIN_FREQ},
+        utils::sine_wave_signal,
+    },
+    pitch::PitchDetector,
+};
 
 use super::utils::audio_buffer_to_signal;
 
@@ -30,7 +36,7 @@ pub fn test_fundamental_freq<D: PitchDetector>(
     let signal = test_signal(samples_file)?;
 
     let freq = detector
-        .detect(&signal, TEST_SAMPLE_RATE)
+        .detect(&signal, TEST_SAMPLE_RATE, Some(MIN_FREQ..MAX_FREQ))
         .ok_or(anyhow::anyhow!("Did not get pitch"))?;
 
     assert!(
@@ -47,7 +53,7 @@ pub fn test_sine_wave<D: PitchDetector>(detector: &mut D, freq: f64) -> anyhow::
     let signal = sine_wave_signal(16384, 440., SAMPLE_RATE);
 
     let actual_freq = detector
-        .detect(&signal, SAMPLE_RATE)
+        .detect(&signal, SAMPLE_RATE, Some(MIN_FREQ..MAX_FREQ))
         .ok_or(anyhow::anyhow!("Did not get pitch"))?;
 
     assert!(
