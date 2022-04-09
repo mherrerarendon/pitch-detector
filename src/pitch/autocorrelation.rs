@@ -77,13 +77,13 @@ impl PitchDetector for AutocorrelationDetector {
 mod test_utils {
     use crate::{
         core::{constants::test_utils::AUTOCORRELATION_ALGORITHM, fft_space::FftSpace},
-        pitch::{core::FftPoint, FftBinData},
+        pitch::{core::FftPoint, SignalToSpectrum},
     };
 
     use super::AutocorrelationDetector;
 
-    impl FftBinData for AutocorrelationDetector {
-        fn calc_bin_magnitudes(&self, signal: &[f64], fft_range: (usize, usize)) -> Vec<f64> {
+    impl SignalToSpectrum for AutocorrelationDetector {
+        fn signal_to_spectrum(&self, signal: &[f64], fft_range: (usize, usize)) -> Vec<f64> {
             let mut fft_space = FftSpace::new(signal.len());
             fft_space.init_with_signal(signal);
             Self::process_fft(&mut fft_space);

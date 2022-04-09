@@ -2,7 +2,7 @@ use pitch_detector::{
     core::{fft_space::FftSpace, test_utils::test_signal, utils::sine_wave_signal},
     pitch::{
         autocorrelation::AutocorrelationDetector, cepstrum::PowerCepstrum, raw_fft::RawFftDetector,
-        FftBinData, PitchDetector,
+        PitchDetector, SignalToSpectrum,
     },
 };
 use plotters::prelude::*;
@@ -17,7 +17,7 @@ fn plot<D>(
     fft_x: f64,
 ) -> anyhow::Result<()>
 where
-    D: PitchDetector + FftBinData,
+    D: PitchDetector + SignalToSpectrum,
 {
     let plot_title = format!("{} - {} - {:.2} fft_x", detector.name(), plot_name, fft_x);
     let output_file = format!(
@@ -26,7 +26,7 @@ where
         format!("{} - {}", detector.name(), plot_name)
     );
 
-    let y_vals: Vec<f64> = detector.calc_bin_magnitudes(signal, fft_range);
+    let y_vals: Vec<f64> = detector.signal_to_spectrum(signal, fft_range);
     let x_vals: Vec<f64> = (0..y_vals.len()).map(|x| x as f64).collect();
     assert_eq!(
         x_vals.len(),
@@ -60,7 +60,7 @@ where
     Ok(())
 }
 
-fn plot_detector_for_files<D: PitchDetector + FftBinData>(
+fn plot_detector_for_files<D: PitchDetector + SignalToSpectrum>(
     mut detector: D,
     test_files: &[&str],
 ) -> anyhow::Result<()> {
@@ -78,7 +78,7 @@ fn plot_detector_for_files<D: PitchDetector + FftBinData>(
     Ok(())
 }
 
-fn plot_detector_for_freq<D: PitchDetector + FftBinData>(
+fn plot_detector_for_freq<D: PitchDetector + SignalToSpectrum>(
     mut detector: D,
     freq: f64,
 ) -> anyhow::Result<()> {

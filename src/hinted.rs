@@ -6,8 +6,8 @@ use crate::core::{fft_space::FftSpace, NoteName};
 use self::note::NoteDetectionResult;
 
 pub trait HintedNoteDetector {
-    // Returns list of bins and magnitudes.
-    fn unscaled_candidates(&mut self, fft_space: ) -> Vec<(f64, f64)>;
+    // Returns list of bins and corresponding magnitudes.
+    fn unscaled_candidates(&mut self) -> Vec<(f64, f64)>;
 
     fn detect_with_hint_and_fft_space<I>(
         &mut self,
