@@ -8,6 +8,3 @@ pub const NOTES: [&str; 12] = [
 
 // Noticable pitch difference starts at around 10-25 cents
 pub const MAX_CENTS_OFFSET: f64 = 10.0;
-
-pub const RAW_FFT_ALGORITHM: &str = "rawfft";
-pub const AUTOCORRELATION_ALGORITHM: &str = "autocorrelation";

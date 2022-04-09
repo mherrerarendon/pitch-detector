@@ -24,7 +24,7 @@ pub fn test_signal(filename: &str) -> anyhow::Result<Vec<f64>> {
     let file_path = format!("{}/test_data/{}", env!("CARGO_MANIFEST_DIR"), filename);
     let mut sample_data: SampleData = serde_json::from_str(&fs::read_to_string(&file_path)?)?;
     let buffer = sample_data.data.take().unwrap();
-    Ok(audio_buffer_to_signal(&buffer))
+    Ok(audio_buffer_to_signal(&buffer).collect())
 }
 
 pub fn test_fundamental_freq<D: PitchDetector>(
@@ -36,7 +36,7 @@ pub fn test_fundamental_freq<D: PitchDetector>(
     let signal = test_signal(samples_file)?;
 
     let freq = detector
-        .detect(&signal, TEST_SAMPLE_RATE, Some(MIN_FREQ..MAX_FREQ))
+        .detect_pitch(&signal, TEST_SAMPLE_RATE, Some(MIN_FREQ..MAX_FREQ))
         .ok_or(anyhow::anyhow!("Did not get pitch"))?;
 
     assert!(
@@ -53,7 +53,7 @@ pub fn test_sine_wave<D: PitchDetector>(detector: &mut D, freq: f64) -> anyhow::
     let signal = sine_wave_signal(16384, 440., SAMPLE_RATE);
 
     let actual_freq = detector
-        .detect(&signal, SAMPLE_RATE, Some(MIN_FREQ..MAX_FREQ))
+        .detect_pitch(&signal, SAMPLE_RATE, Some(MIN_FREQ..MAX_FREQ))
         .ok_or(anyhow::anyhow!("Did not get pitch"))?;
 
     assert!(

@@ -3,42 +3,6 @@ use std::borrow::Borrow;
 use itertools::Itertools;
 use num_traits::signum;
 
-#[derive(Debug, Clone, PartialEq, PartialOrd)]
-pub struct FftBin {
-    pub bin: usize,
-    pub magnitude: f64,
-}
-
-impl Default for FftBin {
-    fn default() -> Self {
-        Self {
-            bin: 0,
-            magnitude: 0.0,
-        }
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, PartialOrd)]
-pub struct FftPoint {
-    pub x: f64,
-    pub y: f64,
-}
-
-impl Default for FftPoint {
-    fn default() -> Self {
-        Self { x: 0.0, y: 0.0 }
-    }
-}
-
-impl From<FftBin> for FftPoint {
-    fn from(bin: FftBin) -> Self {
-        Self {
-            x: bin.bin as f64,
-            y: bin.magnitude,
-        }
-    }
-}
-
 fn zero_crossing_count<I>(signal: I) -> usize
 where
     I: IntoIterator,
@@ -79,7 +43,7 @@ mod tests {
         let mut sample_data: SampleData = serde_json::from_str(&fs::read_to_string(&file_path)?)?;
         let buffer = sample_data.data.take().unwrap();
         let signal = audio_buffer_to_signal(&buffer);
-        let zero_crossings = zero_crossing_count(signal.iter());
+        let zero_crossings = zero_crossing_count(signal);
         assert_eq!(
             zero_crossings, expected_rate,
             "{} failed. Expected {} but got {}",
@@ -92,7 +56,7 @@ mod tests {
         let file_path = format!("{}/test_data/{}", env!("CARGO_MANIFEST_DIR"), filename);
         let mut sample_data: SampleData = serde_json::from_str(&fs::read_to_string(&file_path)?)?;
         let buffer = sample_data.data.take().unwrap();
-        Ok(audio_buffer_to_signal(&buffer))
+        Ok(audio_buffer_to_signal(&buffer).collect())
     }
 
     fn test_zero_rate_crossing(

@@ -2,7 +2,7 @@ use anyhow::Result;
 use float_cmp::ApproxEq;
 use pitch_detector::{
     core::utils::sine_wave_signal,
-    pitch::{raw_fft::RawFftDetector, PitchDetector},
+    pitch::{hanned_fft::HannedFftDetector, PitchDetector},
 };
 
 const NUM_SAMPLES: usize = 16384;
@@ -12,10 +12,10 @@ const MAX_FREQ: f64 = 1046.50; // C6
 const MIN_FREQ: f64 = 32.7; // C1
 
 fn example_detect_frequency() -> Result<()> {
-    let mut detector = RawFftDetector::default();
+    let mut detector = HannedFftDetector::default();
     let signal = sine_wave_signal(NUM_SAMPLES, A440, SAMPLE_RATE);
     let freq = detector
-        .detect(&signal, SAMPLE_RATE, Some(MIN_FREQ..MAX_FREQ))
+        .detect_pitch(&signal, SAMPLE_RATE, Some(MIN_FREQ..MAX_FREQ))
         .ok_or(anyhow::anyhow!("Did not get pitch"))?;
     assert!(
         freq.approx_eq(A440, (0.02, 2)),
