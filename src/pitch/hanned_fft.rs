@@ -93,6 +93,14 @@ impl SignalToSpectrum for HannedFftDetector {
         "rawfft"
     }
 }
+#[cfg(feature = "hinted")]
+mod hinted {
+    use crate::note::hinted::HintedNoteDetector;
+
+    use super::HannedFftDetector;
+    impl HintedNoteDetector for HannedFftDetector {}
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

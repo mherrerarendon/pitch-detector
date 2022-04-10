@@ -1,5 +1,6 @@
 use smoothed_z_score::{PeaksDetector, PeaksFilter};
 
+use super::peak_iter::{FftPeaks, PeakIter};
 use crate::core::FftBin;
 
 pub(crate) trait PeakDetector {
@@ -26,15 +27,10 @@ impl PeakDetector for ZScoreDetector {
     fn detect_peaks(&self, spectrum: &[f64]) -> Vec<FftBin> {
         spectrum
             .into_iter()
+            .map(|x| *x)
             .enumerate()
-            .peaks(
-                PeaksDetector::new(self.lag, self.threshold, self.influence),
-                |e| *e.1,
-            )
-            .map(|((bin, mag), _)| FftBin {
-                bin,
-                magnitude: *mag,
-            })
+            .rev()
+            .fft_peaks(self.lag, self.threshold, self.influence)
             .collect()
     }
 }
