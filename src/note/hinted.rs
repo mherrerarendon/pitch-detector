@@ -1,8 +1,10 @@
+mod peak_detector;
+mod peak_iter;
 use std::ops::Range;
 
 use crate::{
     core::{utils::interpolated_peak_at, NoteName},
-    note::peak_detector::{PeakDetector, ZScoreDetector},
+    note::hinted::peak_detector::{PeakDetector, ZScoreDetector},
     pitch::SignalToSpectrum,
 };
 
@@ -27,7 +29,8 @@ pub trait HintedNoteDetector: SignalToSpectrum {
         candidates
             .iter()
             .find(|bin| {
-                let result = NoteDetectionResult::try_from(bin.bin);
+                let freq = self.bin_to_freq((bin.bin + start_bin) as f64, sample_rate);
+                let result = NoteDetectionResult::try_from(freq);
                 if let Ok(result) = result {
                     result.note_name == note_hint
                 } else {
@@ -36,7 +39,54 @@ pub trait HintedNoteDetector: SignalToSpectrum {
             })
             .and_then(|bin| interpolated_peak_at(&spectrum, bin.bin))
             .and_then(|fft_point| {
-                NoteDetectionResult::try_from(fft_point.x + start_bin as f64).ok()
+                let freq = self.bin_to_freq(fft_point.x + start_bin as f64, sample_rate);
+                NoteDetectionResult::try_from(freq).ok()
             })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{
+        core::test_utils::hinted::assert_hinted_detector, pitch::hanned_fft::HannedFftDetector,
+    };
+
+    use super::*;
+
+    #[test]
+    fn test_hinted_detector() -> anyhow::Result<()> {
+        pub const TEST_SAMPLE_RATE: f64 = 44000.0;
+        let mut detector = HannedFftDetector::default();
+        assert_hinted_detector(
+            &mut detector,
+            "tuner_c5.json",
+            TEST_SAMPLE_RATE,
+            NoteName::C,
+        )?;
+        assert_hinted_detector(
+            &mut detector,
+            "cello_open_a.json",
+            TEST_SAMPLE_RATE,
+            NoteName::A,
+        )?;
+        assert_hinted_detector(
+            &mut detector,
+            "cello_open_d.json",
+            TEST_SAMPLE_RATE,
+            NoteName::D,
+        )?;
+        assert_hinted_detector(
+            &mut detector,
+            "cello_open_g.json",
+            TEST_SAMPLE_RATE,
+            NoteName::G,
+        )?;
+        assert_hinted_detector(
+            &mut detector,
+            "cello_open_c.json",
+            TEST_SAMPLE_RATE,
+            NoteName::C,
+        )?;
+        Ok(())
     }
 }

@@ -41,13 +41,6 @@ impl TryFrom<f64> for NoteDetectionResult {
     }
 }
 
-impl TryFrom<usize> for NoteDetectionResult {
-    type Error = anyhow::Error;
-    fn try_from(bin: usize) -> Result<Self, Self::Error> {
-        (bin as f64).try_into()
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
