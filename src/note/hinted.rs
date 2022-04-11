@@ -48,7 +48,8 @@ pub trait HintedNoteDetector: SignalToSpectrum {
 #[cfg(test)]
 mod tests {
     use crate::{
-        core::test_utils::hinted::assert_hinted_detector, pitch::hanned_fft::HannedFftDetector,
+        core::test_utils::hinted::{assert_hinted_detector, assert_hinted_detector_sine_waves},
+        pitch::hanned_fft::HannedFftDetector,
     };
 
     use super::*;
@@ -87,6 +88,13 @@ mod tests {
             TEST_SAMPLE_RATE,
             NoteName::C,
         )?;
+        Ok(())
+    }
+
+    #[test]
+    fn test_with_mixed_wave_signal() -> anyhow::Result<()> {
+        let mut detector = HannedFftDetector::default();
+        assert_hinted_detector_sine_waves(&mut detector, NoteName::A, vec![440., 523.25])?;
         Ok(())
     }
 }

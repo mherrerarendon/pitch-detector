@@ -33,6 +33,7 @@ pub mod hinted {
         core::{
             constants::{MAX_FREQ, MIN_FREQ},
             test_utils::test_signal,
+            utils::mixed_wave_signal,
             NoteName,
         },
         note::hinted::HintedNoteDetector,
@@ -54,6 +55,28 @@ pub mod hinted {
                     Some(MIN_FREQ..MAX_FREQ)
                 )
                 .ok_or(anyhow::anyhow!("error"))?
+                .note_name,
+            expected_note
+        );
+        Ok(())
+    }
+
+    pub fn assert_hinted_detector_sine_waves<D: HintedNoteDetector>(
+        detector: &mut D,
+        expected_note: NoteName,
+        freqs: Vec<f64>,
+    ) -> anyhow::Result<()> {
+        const SAMPLE_RATE: f64 = 44100.0;
+        let signal = mixed_wave_signal(16384, freqs, SAMPLE_RATE);
+        assert_eq!(
+            detector
+                .detect_note_with_hint(
+                    expected_note.clone(),
+                    &signal,
+                    SAMPLE_RATE,
+                    Some(MIN_FREQ..MAX_FREQ)
+                )
+                .ok_or(anyhow::anyhow!("Failed to detect note with hint"))?
                 .note_name,
             expected_note
         );

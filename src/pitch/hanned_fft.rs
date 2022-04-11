@@ -107,7 +107,7 @@ mod tests {
     use crate::core::test_utils::{test_fundamental_freq, test_signal, test_sine_wave};
 
     #[test]
-    fn test_raw_fft() -> anyhow::Result<()> {
+    fn test_from_sample_files() -> anyhow::Result<()> {
         let mut detector = HannedFftDetector::default();
 
         test_fundamental_freq(&mut detector, "tuner_c5.json", 523.242)?;
@@ -134,7 +134,7 @@ mod tests {
     }
 
     #[test]
-    fn test_raw_fft_sine() -> anyhow::Result<()> {
+    fn test_from_sine_wave() -> anyhow::Result<()> {
         let mut detector = HannedFftDetector::default();
         test_sine_wave(&mut detector, 440.)?;
         Ok(())

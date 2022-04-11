@@ -69,7 +69,8 @@
                 "args": [
                     "build",
                     "--example=basic_usage",
-                    "--package=pitch-detector"
+                    "--package=pitch-detector",
+                    "--features=hinted"
                 ],
                 "filter": {
                     "name": "basic_usage",

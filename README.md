@@ -23,3 +23,6 @@ let freq = detector.detect_frequency(signal, SAMPLE_RATE)?;
 
 assert!(freq.approx_eq(FREQ, (0.02, 2)),);
 ```
+
+## License
+Licensed under the [MIT license](https://github.com/mherrerarendon/pitch-detector/blob/main/LICENSE-MIT)
