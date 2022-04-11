@@ -8,6 +8,15 @@ pub fn sine_wave_signal(num_samples: usize, freq: f64, sample_rate: f64) -> Vec<
         .collect()
 }
 
+pub fn mixed_wave_signal(num_samples: usize, freqs: Vec<f64>, sample_rate: f64) -> Vec<f64> {
+    let mut signal = vec![0.0; num_samples];
+    freqs.iter().for_each(|f| {
+        let s = sine_wave_signal(num_samples, *f, sample_rate);
+        signal.iter_mut().zip(s.iter()).for_each(|(a, b)| *a += *b);
+    });
+    signal
+}
+
 pub fn audio_buffer_to_samples(byte_buffer: &[u8]) -> Box<dyn Iterator<Item = i16> + '_> {
     Box::new(
         byte_buffer

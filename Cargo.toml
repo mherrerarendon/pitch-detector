@@ -29,6 +29,10 @@ hinted =["smoothed_z_score"]
 name = "spectrum_plot"
 required-features = ["test_utils"]
 
+[[example]]
+name = "basic_usage"
+required-features = ["hinted"]
+
 [dependencies]
 anyhow = "1.0.52"
 enum_dispatch = "0.3.7"

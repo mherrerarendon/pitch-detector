@@ -1,7 +1,10 @@
 use std::ops::Range;
 
 use pitch_detector::{
-    core::{test_utils::test_signal, utils::sine_wave_signal},
+    core::{
+        test_utils::test_signal,
+        utils::{mixed_wave_signal, sine_wave_signal},
+    },
     pitch::{
         cepstrum::PowerCepstrum, hanned_fft::HannedFftDetector, PitchDetector, SignalToSpectrum,
     },
@@ -91,13 +94,13 @@ fn plot_detector_for_files<D: PitchDetector + SignalToSpectrum>(
     Ok(())
 }
 
-fn plot_detector_for_freq<D: PitchDetector + SignalToSpectrum>(
+fn plot_detector_for_freqs<D: PitchDetector + SignalToSpectrum>(
     mut detector: D,
-    freq: f64,
+    freq: Vec<f64>,
 ) -> anyhow::Result<()> {
     const TEST_FILE_SAMPLE_RATE: f64 = 44100.;
     const NUM_SAMPLES: usize = 16384;
-    let test_signal = sine_wave_signal(NUM_SAMPLES, freq, TEST_FILE_SAMPLE_RATE);
+    let test_signal = mixed_wave_signal(NUM_SAMPLES, freq, TEST_FILE_SAMPLE_RATE);
     plot(
         &mut detector,
         &test_signal,
@@ -122,6 +125,6 @@ fn main() -> anyhow::Result<()> {
 
     // plot_detector_for_freq(AutocorrelationDetector, 440.)?;
     // plot_detector_for_freq(PowerCepstrum, 440.)?;
-    plot_detector_for_freq(HannedFftDetector::default(), 440.)?;
+    plot_detector_for_freqs(HannedFftDetector::default(), vec![440.])?;
     Ok(())
 }
