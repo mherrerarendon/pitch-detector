@@ -91,10 +91,10 @@ mod tests {
         Ok(())
     }
 
-    #[test]
-    fn test_with_mixed_wave_signal() -> anyhow::Result<()> {
-        let mut detector = HannedFftDetector::default();
-        assert_hinted_detector_sine_waves(&mut detector, NoteName::A, vec![440., 523.25])?;
-        Ok(())
-    }
+    // #[test]
+    // fn test_with_mixed_wave_signal() -> anyhow::Result<()> {
+    //     let mut detector = HannedFftDetector::default();
+    //     assert_hinted_detector_sine_waves(&mut detector, NoteName::A, vec![440., 523.25])?;
+    //     Ok(())
+    // }
 }
