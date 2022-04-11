@@ -13,7 +13,8 @@
                     "test",
                     "--no-run",
                     "--lib",
-                    "--package=pitch-detector"
+                    "--package=pitch-detector",
+                    "--features=hinted"
                 ],
                 "filter": {
                     "name": "pitch_detector",
