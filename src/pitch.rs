@@ -1,6 +1,8 @@
-//! The recommended algorithm is the [crate::pitch::hanned_fft::HannedFftDetector], which is the most versatile. [crate::pitch::cepstrum::PowerCepstrum] on the other hand, is less versatile,
-//! but it is able to detect a fundamental from a sample that includes many harmonics. This means that [crate::pitch::cepstrum::PowerCepstrum] is good for detecting
-//! sounds that are rich in harmonics, as well as low pitched sounds, but bad at detecting samples with fewer partials.
+//! The recommended algorithm is the [HannedFftDetector](crate::pitch::hanned_fft::HannedFftDetector),
+//! which is the most versatile. [PowerCepstrum](crate::pitch::cepstrum::PowerCepstrum) on the other hand, is less versatile,
+//! but it is able to detect a fundamental from a sample that includes many harmonics. This means that [PowerCepstrum](crate::pitch::cepstrum::PowerCepstrum)
+//! is good for detecting sounds that are rich in harmonics, as well as low pitched sounds, but bad at detecting samples
+//! with fewer partials.
 //!
 pub mod cepstrum;
 pub mod core;
