@@ -5,6 +5,7 @@ use rustfft::{num_complex::Complex, FftPlanner};
 
 use super::{PitchDetector, SignalToSpectrum};
 
+#[derive(Debug, Clone)]
 pub struct PowerCepstrum {
     fft_space: Option<FftSpace>,
 }

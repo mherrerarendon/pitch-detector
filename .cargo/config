@@ -1,0 +1,2 @@
+[alias]
+pitch = ["test", "--features", "hinted"]

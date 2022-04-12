@@ -20,7 +20,7 @@ pub trait HintedNoteDetector: SignalToSpectrum {
     ) -> Option<NoteDetectionResult> {
         let (start_bin, spectrum) =
             self.signal_to_spectrum(signal, freq_range_hint.map(|r| (r, sample_rate)));
-        const LAG: usize = 40;
+        const LAG: usize = 20;
         const THRESHOLD: f64 = 6.;
         const INFLUENCE: f64 = 0.;
         let peak_detector = ZScoreDetector::new(LAG, THRESHOLD, INFLUENCE);
@@ -91,10 +91,10 @@ mod tests {
         Ok(())
     }
 
-    // #[test]
-    // fn test_with_mixed_wave_signal() -> anyhow::Result<()> {
-    //     let mut detector = HannedFftDetector::default();
-    //     assert_hinted_detector_sine_waves(&mut detector, NoteName::A, vec![440., 523.25])?;
-    //     Ok(())
-    // }
+    #[test]
+    fn test_with_mixed_wave_signal() -> anyhow::Result<()> {
+        let mut detector = HannedFftDetector::default();
+        assert_hinted_detector_sine_waves(&mut detector, NoteName::A, vec![440., 523.25])?;
+        Ok(())
+    }
 }

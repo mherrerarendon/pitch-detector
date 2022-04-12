@@ -106,7 +106,7 @@ fn plot_detector_for_freqs<D: PitchDetector + SignalToSpectrum>(
         &test_signal,
         MIN_FREQ..MAX_FREQ,
         TEST_FILE_SAMPLE_RATE,
-        "A440",
+        "sine wave",
     )
 }
 fn main() -> anyhow::Result<()> {
@@ -119,12 +119,10 @@ fn main() -> anyhow::Result<()> {
         // "noise.json",
     ];
 
-    // plot_detector_for_files(AutocorrelationDetector, &test_files)?;
     plot_detector_for_files(PowerCepstrum::default(), &test_files)?;
     plot_detector_for_files(HannedFftDetector::default(), &test_files)?;
 
-    // plot_detector_for_freq(AutocorrelationDetector, 440.)?;
-    // plot_detector_for_freq(PowerCepstrum, 440.)?;
     plot_detector_for_freqs(HannedFftDetector::default(), vec![440.])?;
+    plot_detector_for_freqs(HannedFftDetector::default(), vec![440., 523.])?;
     Ok(())
 }
