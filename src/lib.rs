@@ -18,6 +18,7 @@
 //! # Ok(())
 //! # }
 //! ```
+//!
 //! Another common use case is to detect the predominant note of a signal. This use case is similar to the first,
 //! but the predominant note of the signal maps to a range of frequencies, which includes out-of-tune frequencies.
 //! This use case is common for tuner applications, where the user would still want to know which note is being played,
@@ -48,7 +49,7 @@
 //! #    Ok(())
 //! # }
 //! ```
-
+//!
 //! The last use case is to detect a note with a hint. So far, the previous use cases have been about detecting
 //! the predominant frequency or note. In this use case, we are providing the detector a hint so that it can
 //! detect a frequency that might not be the predominant note. This is useful when there are multiple frequencies
@@ -81,7 +82,8 @@
 //! #    Ok(())
 //! # }
 //! ```
-//! Check out the `examples` directory for more.
+//!
+//! Check out the [examples](https://github.com/mherrerarendon/pitch-detector/tree/main/examples) directory for more.
 //! Pitch Detector currently supports two different algorithms for pitch detection, but it can easily be
 //! expanded to support more algorithms. For more information on these algorithms, see the [pitch] module.
 //!

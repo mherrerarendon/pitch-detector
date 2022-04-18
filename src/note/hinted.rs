@@ -1,10 +1,9 @@
 mod peak_detector;
-mod peak_iter;
 use std::ops::Range;
 
 use crate::{
     core::{utils::interpolated_peak_at, NoteName},
-    note::hinted::peak_detector::{PeakDetector, ZScoreDetector},
+    note::hinted::peak_detector::{PeakDetector, PeakFinderDetector},
     pitch::SignalToSpectrum,
 };
 
@@ -29,10 +28,8 @@ pub trait HintedNoteDetector: SignalToSpectrum {
     ) -> Option<NoteDetectionResult> {
         let (start_bin, spectrum) =
             self.signal_to_spectrum(signal, freq_range_hint.map(|r| (r, sample_rate)));
-        const LAG: usize = 20;
         const THRESHOLD: f64 = 6.;
-        const INFLUENCE: f64 = 0.;
-        let peak_detector = ZScoreDetector::new(LAG, THRESHOLD, INFLUENCE);
+        let peak_detector = PeakFinderDetector::new(THRESHOLD);
         let mut candidates = peak_detector.detect_peaks(&spectrum);
         candidates.sort_by(|a, b| b.partial_cmp(&a).unwrap());
         candidates
