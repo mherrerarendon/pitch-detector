@@ -15,7 +15,7 @@
 //! let mut detector = HannedFftDetector::default();
 //! let signal: Vec<f64> = Vec::new(); // Signal to analyze
 //! let freq = detector
-//!     .detect_pitch(&signal, SAMPLE_RATE, Some(MIN_FREQ..MAX_FREQ))
+//!     .detect_pitch(&signal, SAMPLE_RATE)
 //!     .ok_or(anyhow::anyhow!("Did not get pitch"))?;
 //! # Ok(())
 //! # }
@@ -79,7 +79,6 @@
 //!         NoteName::A,
 //!         &combined_signal,
 //!         SAMPLE_RATE,
-//!         Some(MIN_FREQ..MAX_FREQ),
 //!     )
 //!     .ok_or(anyhow::anyhow!("Did not get note"))?;
 //!
@@ -97,3 +96,6 @@
 pub mod core;
 pub mod note;
 pub mod pitch;
+
+#[cfg(feature = "plot")]
+pub mod plot;

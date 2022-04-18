@@ -17,7 +17,7 @@ let sample_rate = 44100.
 let signal: Vec<f64> = ...;
 
 let mut detector = HannedFftDetector::default();
-let freq = detector.detect_pitch(&signal, sample_rate, None)?;
+let freq = detector.detect_pitch(&signal, sample_rate)?;
 ```
 Another common use case is to detect the predominant note of a signal. The predominant frequency of the signal does not have to be strictly correspond to the exact frequency of the note. This use case is common for tuner applications, where the user would still want to know which note is being played, even if it's out of tune. The return type of `detect_note` includes the offset in cents from the in-tune frequency.
 ```rust
@@ -48,7 +48,6 @@ let note = detector
             NoteName::A,
             &mixed_signal,
             sample_rate,
-            None,
         )
         .ok_or(anyhow::anyhow!("Did not detect hinted note in signal"))?;
 assert_eq!(note.note_name, NoteName::A);

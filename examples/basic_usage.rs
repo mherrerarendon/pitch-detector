@@ -15,7 +15,7 @@ fn example_detect_frequency() -> Result<()> {
     let mut detector = HannedFftDetector::default();
     let signal = sine_wave_signal(NUM_SAMPLES, 440., SAMPLE_RATE);
     let freq = detector
-        .detect_pitch(&signal, SAMPLE_RATE, Some(MIN_FREQ..MAX_FREQ))
+        .detect_pitch_in_range(&signal, SAMPLE_RATE, Some(MIN_FREQ..MAX_FREQ))
         .ok_or(anyhow::anyhow!("Did not get pitch"))?;
     assert!(
         freq.approx_eq(440., (0.02, 2)),
@@ -50,7 +50,7 @@ fn example_hinted_note() -> anyhow::Result<()> {
     let signal_c = sine_wave_signal(NUM_SAMPLES, in_tune_c, SAMPLE_RATE);
     let combined_signal: Vec<f64> = signal_a.iter().zip(signal_c).map(|(a, c)| a + c).collect();
     let note = detector
-        .detect_note_with_hint(
+        .detect_note_with_hint_and_range(
             NoteName::A,
             &combined_signal,
             SAMPLE_RATE,

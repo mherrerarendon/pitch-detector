@@ -7,7 +7,7 @@ use std::ops::Range;
 
 use crate::pitch::PitchDetector;
 
-use self::note_detection_result::NoteDetectionResult;
+pub use self::note_detection_result::NoteDetectionResult;
 
 pub fn detect_note<D: PitchDetector>(
     signal: &[f64],
@@ -16,6 +16,6 @@ pub fn detect_note<D: PitchDetector>(
     freq_range_hint: Option<Range<f64>>,
 ) -> Option<NoteDetectionResult> {
     freq_detector
-        .detect_pitch(signal, sample_rate, freq_range_hint)
+        .detect_pitch_in_range(signal, sample_rate, freq_range_hint)
         .and_then(|f| f.try_into().ok())
 }
