@@ -9,8 +9,6 @@
 //! # fn example_detect_frequency() -> anyhow::Result<()> {
 //! # const NUM_SAMPLES: usize = 16384;
 //! # const SAMPLE_RATE: f64 = 44100.0;
-//! # const MAX_FREQ: f64 = 1046.50; // C6
-//! # const MIN_FREQ: f64 = 32.7; // C1
 //!
 //! let mut detector = HannedFftDetector::default();
 //! let signal: Vec<f64> = Vec::new(); // Signal to analyze
@@ -20,10 +18,11 @@
 //! # Ok(())
 //! # }
 //! ```
-//! Another common use case is to detect the predominant note of a signal. The predominant frequency of the
-//! signal does not have to be strictly correspond to the exact frequency of the note. This use case is common
-//! for tuner applications, where the user would still want to know which note is being played, even if it's out
-//! of tune. The return type of `detect_note` includes the offset in cents from the in-tune frequency.
+//! Another common use case is to detect the predominant note of a signal. This use case is similar to the first,
+//! but the predominant note of the signal maps to a range of frequencies, which includes out-of-tune frequencies.
+//! This use case is common for tuner applications, where the user would still want to know which note is being played,
+//! even if it's out of tune. The return type of `detect_note` includes the offset in cents from the in-tune frequency,
+//! and other useful information.
 //! ```rust
 //! use pitch_detector::{
 //!     core::{utils::sine_wave_signal, NoteName},
@@ -33,8 +32,6 @@
 //! # fn example_detect_note() -> anyhow::Result<()> {
 //! # const NUM_SAMPLES: usize = 16384;
 //! # const SAMPLE_RATE: f64 = 44100.0;
-//! # const MAX_FREQ: f64 = 1046.50; // C6
-//! # const MIN_FREQ: f64 = 32.7; // C1
 //!
 //! let mut detector = HannedFftDetector::default();
 //! let slightly_sharp_a = 448.;
@@ -43,7 +40,6 @@
 //!     &signal,
 //!     &mut detector,
 //!     SAMPLE_RATE,
-//!     Some(MIN_FREQ..MAX_FREQ),
 //! )
 //! .ok_or(anyhow::anyhow!("Did not get note"))?;
 //!
@@ -53,7 +49,7 @@
 //! # }
 //! ```
 
-//! The last use case is to detect a note with hint. So far, the previous use cases have been about detecting
+//! The last use case is to detect a note with a hint. So far, the previous use cases have been about detecting
 //! the predominant frequency or note. In this use case, we are providing the detector a hint so that it can
 //! detect a frequency that might not be the predominant note. This is useful when there are multiple frequencies
 //! in a signal (as there commonly are), but you want to know if the signal contains a specific note, and the
@@ -67,8 +63,6 @@
 //! # fn example_hinted_note() -> anyhow::Result<()> {
 //! # const NUM_SAMPLES: usize = 16384;
 //! # const SAMPLE_RATE: f64 = 44100.0;
-//! # const MAX_FREQ: f64 = 1046.50; // C6
-//! # const MIN_FREQ: f64 = 32.7; // C1
 //!
 //! let mut detector = HannedFftDetector::default();
 //! let slightly_sharp_a = 448.;

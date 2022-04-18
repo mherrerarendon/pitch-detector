@@ -2,7 +2,7 @@ use anyhow::Result;
 use float_cmp::ApproxEq;
 use pitch_detector::{
     core::{utils::sine_wave_signal, NoteName},
-    note::{detect_note, hinted::HintedNoteDetector},
+    note::{detect_note_in_range, hinted::HintedNoteDetector},
     pitch::{hanned_fft::HannedFftDetector, PitchDetector},
 };
 
@@ -30,7 +30,7 @@ fn example_detect_note() -> Result<()> {
     let mut detector = HannedFftDetector::default();
     let slightly_sharp_a = 448.;
     let signal = sine_wave_signal(NUM_SAMPLES, slightly_sharp_a, SAMPLE_RATE);
-    let note = detect_note(
+    let note = detect_note_in_range(
         &signal,
         &mut detector,
         SAMPLE_RATE,

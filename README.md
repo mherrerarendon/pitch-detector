@@ -19,7 +19,7 @@ let signal: Vec<f64> = ...;
 let mut detector = HannedFftDetector::default();
 let freq = detector.detect_pitch(&signal, sample_rate)?;
 ```
-Another common use case is to detect the predominant note of a signal. The predominant frequency of the signal does not have to be strictly correspond to the exact frequency of the note. This use case is common for tuner applications, where the user would still want to know which note is being played, even if it's out of tune. The return type of `detect_note` includes the offset in cents from the in-tune frequency.
+Another common use case is to detect the predominant note of a signal. This use case is similar to the first, but the predominant note of the signal maps to a range of frequencies, which includes out-of-tune frequencies. This use case is common for tuner applications, where the user would still want to know which note is being played, even if it's out of tune. The return type of `detect_note` includes the offset in cents from the in-tune frequency, and other useful information.
 ```rust
 use pitch_detector::{
     pitch::{hanned_fft::HannedFftDetector, PitchDetector},
@@ -34,11 +34,10 @@ let note = detect_note(
         &signal,
         &mut detector,
         sample_rate,
-        None,
     )?;
 ```
 
-The last use case is to detect a note with hint. So far, the previous use cases have been about detecting the predominant frequency or note. In this use case, we are providing the detector a hint so that it can detect a frequency that might not be the predominant note. This is useful when there are multiple frequencies in a signal (as there commonly are), but you want to know if the signal contains a specific note, and the degree to which this specific note is in tune or not.
+The last use case is to detect a note with a hint. So far, the previous use cases have been about detecting the predominant frequency or note. In this use case, we are providing the detector a hint so that it can detect a frequency that might not be the predominant note. This is useful when there are multiple frequencies in a signal (as there commonly are), but you want to know if the signal contains a specific note, and the degree to which this specific note is in tune or not.
 ```rust
 let sample_rate = 44100.
 let mixed_signal: Vec<f64> = ... // mixed_signal contains multiple overlapping frequencies
