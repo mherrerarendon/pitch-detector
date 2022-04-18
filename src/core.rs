@@ -1,6 +1,6 @@
 use std::fmt;
 
-pub(crate) mod constants;
+pub mod constants;
 pub mod fft_space;
 pub mod utils;
 

@@ -127,7 +127,7 @@ mod tests {
 
         let mut detector = HannedFftDetector::default();
         assert!(detector
-            .detect_pitch(&signal, TEST_SAMPLE_RATE, None)
+            .detect_pitch_in_range(&signal, TEST_SAMPLE_RATE, None)
             .is_none());
 
         Ok(())

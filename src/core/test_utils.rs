@@ -48,7 +48,7 @@ pub mod hinted {
         let signal = test_signal(samples_file)?;
         assert_eq!(
             detector
-                .detect_note_with_hint(
+                .detect_note_with_hint_and_range(
                     expected_note.clone(),
                     &signal,
                     file_sample_rate,
@@ -70,7 +70,7 @@ pub mod hinted {
         let signal = mixed_wave_signal(16384, freqs, SAMPLE_RATE);
         assert_eq!(
             detector
-                .detect_note_with_hint(
+                .detect_note_with_hint_and_range(
                     expected_note.clone(),
                     &signal,
                     SAMPLE_RATE,
@@ -93,7 +93,7 @@ pub fn test_fundamental_freq<D: PitchDetector>(
     let signal = test_signal(samples_file)?;
 
     let freq = detector
-        .detect_pitch(&signal, TEST_SAMPLE_RATE, Some(MIN_FREQ..MAX_FREQ))
+        .detect_pitch_in_range(&signal, TEST_SAMPLE_RATE, Some(MIN_FREQ..MAX_FREQ))
         .ok_or(anyhow::anyhow!("Did not get pitch"))?;
 
     assert!(
@@ -110,7 +110,7 @@ pub fn test_sine_wave<D: PitchDetector>(detector: &mut D, freq: f64) -> anyhow::
     let signal = sine_wave_signal(16384, 440., SAMPLE_RATE);
 
     let actual_freq = detector
-        .detect_pitch(&signal, SAMPLE_RATE, Some(MIN_FREQ..MAX_FREQ))
+        .detect_pitch_in_range(&signal, SAMPLE_RATE, Some(MIN_FREQ..MAX_FREQ))
         .ok_or(anyhow::anyhow!("Did not get pitch"))?;
 
     assert!(

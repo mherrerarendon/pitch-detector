@@ -16,7 +16,10 @@ use std::ops::Range;
 use crate::core::{utils::interpolated_peak_at, FftPoint};
 
 pub trait PitchDetector: SignalToSpectrum {
-    fn detect_pitch(
+    fn detect_pitch(&mut self, signal: &[f64], sample_rate: f64) -> Option<f64> {
+        self.detect_pitch_in_range(signal, sample_rate, None)
+    }
+    fn detect_pitch_in_range(
         &mut self,
         signal: &[f64],
         sample_rate: f64,
