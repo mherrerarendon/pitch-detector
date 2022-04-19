@@ -6,23 +6,22 @@
 //! use pitch_detector::{
 //!     pitch::{hanned_fft::HannedFftDetector, PitchDetector},
 //! };
-//! # fn example_detect_frequency() -> anyhow::Result<()> {
+//! # fn example_detect_frequency() -> Option<()> {
 //! # const NUM_SAMPLES: usize = 16384;
 //! # const SAMPLE_RATE: f64 = 44100.0;
 //!
 //! let mut detector = HannedFftDetector::default();
 //! let signal: Vec<f64> = Vec::new(); // Signal to analyze
-//! let freq = detector
-//!     .detect_pitch(&signal, SAMPLE_RATE)
-//!     .ok_or(anyhow::anyhow!("Did not get pitch"))?;
-//! # Ok(())
+//! let freq: f64 = detector
+//!     .detect_pitch(&signal, SAMPLE_RATE)?;
+//! # None
 //! # }
 //! ```
 //!
 //! Another common use case is to detect the predominant note of a signal. This use case is similar to the first,
 //! but the predominant note of the signal maps to a range of frequencies, which includes out-of-tune frequencies.
 //! This use case is common for tuner applications, where the user would still want to know which note is being played,
-//! even if it's out of tune. The return type of `detect_note` includes the offset in cents from the in-tune frequency,
+//! even if it's out of tune. The return type of `detect_note` includes the offset in cents from the note name, in-tune frequency,
 //! and other useful information.
 //! ```rust
 //! use pitch_detector::{
@@ -30,7 +29,7 @@
 //!     note::{detect_note},
 //!     pitch::{hanned_fft::HannedFftDetector, PitchDetector},
 //! };
-//! # fn example_detect_note() -> anyhow::Result<()> {
+//! # fn example_detect_note() -> Option<()> {
 //! # const NUM_SAMPLES: usize = 16384;
 //! # const SAMPLE_RATE: f64 = 44100.0;
 //!
@@ -41,12 +40,11 @@
 //!     &signal,
 //!     &mut detector,
 //!     SAMPLE_RATE,
-//! )
-//! .ok_or(anyhow::anyhow!("Did not get note"))?;
+//! )?;
 //!
 //! assert_eq!(note.note_name, NoteName::A);
 //! assert!(note.cents_offset > 0.);
-//! #    Ok(())
+//! # None
 //! # }
 //! ```
 //!
@@ -61,7 +59,7 @@
 //!     note::{hinted::HintedNoteDetector},
 //!     pitch::{hanned_fft::HannedFftDetector, PitchDetector},
 //! };
-//! # fn example_hinted_note() -> anyhow::Result<()> {
+//! # fn example_hinted_note() -> Option<()> {
 //! # const NUM_SAMPLES: usize = 16384;
 //! # const SAMPLE_RATE: f64 = 44100.0;
 //!
@@ -74,12 +72,11 @@
 //!         NoteName::A,
 //!         &combined_signal,
 //!         SAMPLE_RATE,
-//!     )
-//!     .ok_or(anyhow::anyhow!("Did not get note"))?;
+//!     )?;
 //!
 //! assert_eq!(note.note_name, NoteName::A);
 //! assert!(note.cents_offset > 0.);
-//! #    Ok(())
+//! # None
 //! # }
 //! ```
 //!
