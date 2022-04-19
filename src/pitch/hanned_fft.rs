@@ -126,9 +126,7 @@ mod tests {
         let signal = test_signal("noise.json")?;
 
         let mut detector = HannedFftDetector::default();
-        assert!(detector
-            .detect_pitch_in_range(&signal, TEST_SAMPLE_RATE, None)
-            .is_none());
+        assert!(detector.detect_pitch(&signal, TEST_SAMPLE_RATE).is_none());
 
         Ok(())
     }

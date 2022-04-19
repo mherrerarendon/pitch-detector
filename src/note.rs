@@ -9,7 +9,9 @@ use crate::pitch::PitchDetector;
 
 pub use self::note_detection_result::NoteDetectionResult;
 
-/// Returns the predominant note of the given signal.
+/// Returns the predominant note of the given signal. It will detect within a conventional
+/// range of frequencies (20Hz to nyquist). If you want to detect a note in a specific range,
+/// use the [detect_note_in_range] method
 /// ## Examples
 /// ```rust
 /// use pitch_detector::{
@@ -40,7 +42,9 @@ pub fn detect_note<D: PitchDetector>(
     freq_detector: &mut D,
     sample_rate: f64,
 ) -> Option<NoteDetectionResult> {
-    detect_note_in_range(signal, freq_detector, sample_rate, None)
+    let nyquist_freq = sample_rate / 2.;
+    let min_freq = 20.; // Conventional minimum frequency for human hearing
+    detect_note_in_range(signal, freq_detector, sample_rate, min_freq..nyquist_freq)
 }
 
 /// Returns the predominant note of the given signal within the specified range.
@@ -64,7 +68,7 @@ pub fn detect_note<D: PitchDetector>(
 ///     &signal,
 ///     &mut detector,
 ///     SAMPLE_RATE,
-///     Some(MIN_FREQ..MAX_FREQ),
+///     MIN_FREQ..MAX_FREQ,
 /// )?;
 //
 /// assert_eq!(note.note_name, NoteName::A);
@@ -75,7 +79,7 @@ pub fn detect_note<D: PitchDetector>(
 ///     &signal,
 ///     &mut detector,
 ///     SAMPLE_RATE,
-///     Some(MIN_FREQ..MAX_FREQ),
+///     MIN_FREQ..MAX_FREQ,
 /// );
 /// assert!(note.is_none());
 /// # None
@@ -85,9 +89,9 @@ pub fn detect_note_in_range<D: PitchDetector>(
     signal: &[f64],
     freq_detector: &mut D,
     sample_rate: f64,
-    freq_range_hint: Option<Range<f64>>,
+    freq_range: Range<f64>,
 ) -> Option<NoteDetectionResult> {
     freq_detector
-        .detect_pitch_in_range(signal, sample_rate, freq_range_hint)
+        .detect_pitch_in_range(signal, sample_rate, freq_range)
         .and_then(|f| f.try_into().ok())
 }

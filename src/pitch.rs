@@ -16,19 +16,23 @@ use std::ops::Range;
 use crate::core::{utils::interpolated_peak_at, FftPoint};
 
 pub trait PitchDetector: SignalToSpectrum {
+    /// The default implementation will detect within a conventional range of frequencies (20Hz to nyquist).
+    /// If you want to detect a pitch in a specific range, use the [detect_pitch_in_range](Self::detect_pitch_in_range) method
     fn detect_pitch(&mut self, signal: &[f64], sample_rate: f64) -> Option<f64> {
-        self.detect_pitch_in_range(signal, sample_rate, None)
+        let nyquist_freq = sample_rate / 2.;
+        let min_freq = 20.; // Conventional minimum frequency for human hearing
+        self.detect_pitch_in_range(signal, sample_rate, min_freq..nyquist_freq)
     }
 
-    /// Alternatively, you can specify a frequency range to restrict the detection algorithm.
+    /// Default implementation to detect a pitch within the specified frequency range.
     fn detect_pitch_in_range(
         &mut self,
         signal: &[f64],
         sample_rate: f64,
-        freq_range_hint: Option<Range<f64>>,
+        freq_range: Range<f64>,
     ) -> Option<f64> {
         let (start_bin, spectrum) =
-            self.signal_to_spectrum(signal, freq_range_hint.map(|r| (r, sample_rate)));
+            self.signal_to_spectrum(signal, Some((freq_range, sample_rate)));
         let max_bin =
             spectrum.iter().enumerate().reduce(
                 |accum, item| {

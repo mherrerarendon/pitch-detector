@@ -22,7 +22,7 @@ name = "pitch_detector"
 path = "src/lib.rs"
 
 [features]
-test_utils = ["serde", "serde_json"]
+test_utils = ["serde", "serde_json", "float-cmp"]
 # hinted =["smoothed_z_score", "peak_finder"]
 hinted =["peak_finder"]
 plot = ["plotters"]
@@ -37,23 +37,22 @@ required-features = ["hinted"]
 
 [dependencies]
 anyhow = "1.0.52"
-enum_dispatch = "0.3.7"
 rustfft = "6.0.1"
 fitting = "0.3.0"
-float-cmp = "0.9.0"
 num-traits = { version = "0.2", default-features = false }
 apodize = "1.0.0"
 itertools = "0.10.3"
 serde_json = {version = "1.0.74", optional = true}
 serde = {version = "1.0.133", features = ["derive"], optional = true}
+peak_finder = {version = "1.0.0", optional = true}
+plotters = {version = "0.3.1", optional = true}
+float-cmp = {version = "0.9.0", optional = true}
 
 # Can't publish with git dependency, wrote up issue with original repo author
 # smoothed_z_score = {git = "https://github.com/mherrerarendon/smoothed_z_score.git", optional = true}
 
-peak_finder = {version = "1.0.0", optional = true}
-plotters = {version = "0.3.1", optional = true}
-
 [dev-dependencies]
+float-cmp = "0.9.0"
 serde_json = "1.0.74"
 serde = {version = "1.0.133", features = ["derive"]}
 plotters = "0.3.1"

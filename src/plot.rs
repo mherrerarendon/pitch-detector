@@ -18,7 +18,7 @@ where
     D: PitchDetector + SignalToSpectrum,
 {
     let max_freq = detector
-        .detect_pitch_in_range(signal, sample_rate, Some(freq_range.clone()))
+        .detect_pitch_in_range(signal, sample_rate, freq_range.clone())
         .ok_or(anyhow::anyhow!("No pitch"))?;
     let max_bin = detector.freq_to_bin(max_freq, sample_rate);
     let plot_title = format!(

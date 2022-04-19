@@ -15,7 +15,7 @@ fn example_detect_frequency() -> Result<()> {
     let mut detector = HannedFftDetector::default();
     let signal = sine_wave_signal(NUM_SAMPLES, 440., SAMPLE_RATE);
     let freq = detector
-        .detect_pitch_in_range(&signal, SAMPLE_RATE, Some(MIN_FREQ..MAX_FREQ))
+        .detect_pitch_in_range(&signal, SAMPLE_RATE, MIN_FREQ..MAX_FREQ)
         .ok_or(anyhow::anyhow!("Did not get pitch"))?;
     assert!(
         freq.approx_eq(440., (0.02, 2)),
@@ -30,13 +30,8 @@ fn example_detect_note() -> Result<()> {
     let mut detector = HannedFftDetector::default();
     let slightly_sharp_a = 448.;
     let signal = sine_wave_signal(NUM_SAMPLES, slightly_sharp_a, SAMPLE_RATE);
-    let note = detect_note_in_range(
-        &signal,
-        &mut detector,
-        SAMPLE_RATE,
-        Some(MIN_FREQ..MAX_FREQ),
-    )
-    .ok_or(anyhow::anyhow!("Did not get note"))?;
+    let note = detect_note_in_range(&signal, &mut detector, SAMPLE_RATE, MIN_FREQ..MAX_FREQ)
+        .ok_or(anyhow::anyhow!("Did not get note"))?;
     assert_eq!(note.note_name, NoteName::A);
     assert!(note.cents_offset > 0.);
     Ok(())
