@@ -1,8 +1,6 @@
 use pitch_detector::{
     core::{test_utils::test_signal, utils::mixed_wave_signal},
-    pitch::{
-        cepstrum::PowerCepstrum, hanned_fft::HannedFftDetector, PitchDetector, SignalToSpectrum,
-    },
+    pitch::{HannedFftDetector, PitchDetector, PowerCepstrum, SignalToSpectrum},
     plot::plot_spectrum,
 };
 

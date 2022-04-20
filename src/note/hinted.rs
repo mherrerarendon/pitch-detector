@@ -55,7 +55,7 @@ pub trait HintedNoteDetector: SignalToSpectrum {
 mod tests {
     use crate::{
         core::test_utils::hinted::{assert_hinted_detector, assert_hinted_detector_sine_waves},
-        pitch::hanned_fft::HannedFftDetector,
+        pitch::HannedFftDetector,
     };
 
     use super::*;

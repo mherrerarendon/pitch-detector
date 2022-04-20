@@ -4,7 +4,7 @@
 //! Probably the most common use case is to detect the predominant frequency of a signal.
 //! ```rust
 //! use pitch_detector::{
-//!     pitch::{hanned_fft::HannedFftDetector, PitchDetector},
+//!     pitch::{HannedFftDetector, PitchDetector},
 //! };
 //! # fn example_detect_frequency() -> Option<()> {
 //! # const NUM_SAMPLES: usize = 16384;
@@ -27,7 +27,7 @@
 //! use pitch_detector::{
 //!     core::{utils::sine_wave_signal, NoteName},
 //!     note::{detect_note},
-//!     pitch::{hanned_fft::HannedFftDetector, PitchDetector},
+//!     pitch::{HannedFftDetector, PitchDetector},
 //! };
 //! # fn example_detect_note() -> Option<()> {
 //! # const NUM_SAMPLES: usize = 16384;
@@ -57,7 +57,7 @@
 //! use pitch_detector::{
 //!     core::{utils::sine_wave_signal, NoteName},
 //!     note::{hinted::HintedNoteDetector},
-//!     pitch::{hanned_fft::HannedFftDetector, PitchDetector},
+//!     pitch::{HannedFftDetector, PitchDetector},
 //! };
 //! # fn example_hinted_note() -> Option<()> {
 //! # const NUM_SAMPLES: usize = 16384;

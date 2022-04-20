@@ -17,7 +17,7 @@ pub use self::note_detection_result::NoteDetectionResult;
 /// use pitch_detector::{
 ///     core::{utils::sine_wave_signal, NoteName},
 ///     note::{detect_note},
-///     pitch::{hanned_fft::HannedFftDetector, PitchDetector},
+///     pitch::{HannedFftDetector, PitchDetector},
 /// };
 /// # fn example_detect_note() -> Option<()> {
 /// # const NUM_SAMPLES: usize = 16384;
@@ -53,7 +53,7 @@ pub fn detect_note<D: PitchDetector>(
 /// use pitch_detector::{
 ///     core::{utils::sine_wave_signal, NoteName},
 ///     note::{detect_note_in_range},
-///     pitch::{hanned_fft::HannedFftDetector, PitchDetector},
+///     pitch::{HannedFftDetector, PitchDetector},
 /// };
 /// # fn example_detect_note() -> Option<()> {
 /// # const NUM_SAMPLES: usize = 16384;

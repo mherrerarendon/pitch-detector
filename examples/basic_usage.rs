@@ -3,7 +3,7 @@ use float_cmp::ApproxEq;
 use pitch_detector::{
     core::{utils::sine_wave_signal, NoteName},
     note::{detect_note_in_range, hinted::HintedNoteDetector},
-    pitch::{hanned_fft::HannedFftDetector, PitchDetector},
+    pitch::{HannedFftDetector, PitchDetector},
 };
 
 const NUM_SAMPLES: usize = 16384;

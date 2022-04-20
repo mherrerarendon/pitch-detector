@@ -23,12 +23,13 @@ impl HannedFftDetector {
     fn unscaled_spectrum(&self, bin_range: (usize, usize)) -> Box<dyn Iterator<Item = f64> + '_> {
         if let Some(ref fft_space) = self.fft_space {
             let (lower_limit, upper_limit) = bin_range;
+            let normalize = 1. / (fft_space.padded_len() as f64).sqrt();
             Box::new(
                 fft_space
                     .freq_domain(true)
                     .skip(lower_limit)
                     .take(upper_limit - lower_limit)
-                    .map(|(amplitude, _)| amplitude),
+                    .map(move |(amplitude, _)| amplitude * normalize),
             )
         } else {
             panic!("FFT space not initialized");

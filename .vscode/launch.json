@@ -33,7 +33,7 @@
                     "build",
                     "--example=spectrum_plot",
                     "--package=pitch-detector",
-                    "--features=test_utils"
+                    "--features=test_utils,plot"
                 ],
                 "filter": {
                     "name": "spectrum_plot",

@@ -4,9 +4,12 @@
 //! is good for detecting sounds that are rich in harmonics, as well as low pitched sounds, but bad at detecting samples
 //! with fewer partials.
 //!
-pub mod cepstrum;
-pub mod core;
-pub mod hanned_fft;
+mod cepstrum;
+mod core;
+mod hanned_fft;
+
+pub use cepstrum::PowerCepstrum;
+pub use hanned_fft::HannedFftDetector;
 
 // autocorrelation doesn't work well enough yet.
 // pub mod autocorrelation;
