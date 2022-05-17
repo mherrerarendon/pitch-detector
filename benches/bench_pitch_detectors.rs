@@ -1,11 +1,11 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use pitch_detector::{
-    core::test_utils::test_signal,
+    core::test_utils::test_signal_json,
     pitch::{HannedFftDetector, PitchDetector, PowerCepstrum},
 };
 
 fn criterion_benchmark(c: &mut Criterion) {
-    let signal = test_signal("cello_open_a.json").expect("Test file should exist");
+    let signal = test_signal_json("cello_open_a.json").expect("Test file should exist");
     let mut hanned_detector = HannedFftDetector::default();
     let mut cepstrum_detector = PowerCepstrum::default();
     let sample_rate = 44000.;

@@ -1,5 +1,5 @@
 use pitch_detector::{
-    core::{test_utils::test_signal, utils::mixed_wave_signal},
+    core::{test_utils::test_signal_json, utils::mixed_wave_signal},
     pitch::{HannedFftDetector, PitchDetector, PowerCepstrum, SignalToSpectrum},
     plot::plot_spectrum,
 };
@@ -13,7 +13,7 @@ fn plot_detector_for_files<D: PitchDetector + SignalToSpectrum>(
     test_files: &[&str],
 ) -> anyhow::Result<()> {
     for test_file in test_files {
-        let test_signal = test_signal(test_file)?;
+        let test_signal = test_signal_json(test_file)?;
         plot_spectrum(
             &mut detector,
             &test_signal,

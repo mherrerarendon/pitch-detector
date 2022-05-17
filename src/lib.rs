@@ -92,3 +92,6 @@ pub mod pitch;
 
 #[cfg(feature = "plot")]
 pub mod plot;
+
+#[cfg(feature = "analyzer")]
+pub mod analyzer;

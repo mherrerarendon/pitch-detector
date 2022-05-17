@@ -105,7 +105,7 @@ mod hinted {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::test_utils::{test_fundamental_freq, test_signal, test_sine_wave};
+    use crate::core::test_utils::{test_fundamental_freq, test_signal_json, test_sine_wave};
 
     #[test]
     fn test_from_sample_files() -> anyhow::Result<()> {
@@ -124,7 +124,7 @@ mod tests {
     // #[test]
     fn test_noise() -> anyhow::Result<()> {
         pub const TEST_SAMPLE_RATE: f64 = 44000.0;
-        let signal = test_signal("noise.json")?;
+        let signal = test_signal_json("noise.json")?;
 
         let mut detector = HannedFftDetector::default();
         assert!(detector.detect_pitch(&signal, TEST_SAMPLE_RATE).is_none());

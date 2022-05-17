@@ -20,8 +20,19 @@ pub struct SampleData {
     pub data: Option<Vec<u8>>,
 }
 
-pub fn test_signal(filename: &str) -> anyhow::Result<Vec<f64>> {
+pub fn test_signal_json(filename: &str) -> anyhow::Result<Vec<f64>> {
     let file_path = format!("{}/test_data/{}", env!("CARGO_MANIFEST_DIR"), filename);
+    let mut sample_data: SampleData = serde_json::from_str(&fs::read_to_string(&file_path)?)?;
+    let buffer = sample_data.data.take().unwrap();
+    Ok(audio_buffer_to_signal(&buffer).collect())
+}
+
+pub fn test_signal_wav(filename: &str) -> anyhow::Result<Vec<f64>> {
+    let file_path = format!(
+        "{}/test_data/wav/guitar_samples/{}",
+        env!("CARGO_MANIFEST_DIR"),
+        filename
+    );
     let mut sample_data: SampleData = serde_json::from_str(&fs::read_to_string(&file_path)?)?;
     let buffer = sample_data.data.take().unwrap();
     Ok(audio_buffer_to_signal(&buffer).collect())
@@ -32,7 +43,7 @@ pub mod hinted {
     use crate::{
         core::{
             constants::{MAX_FREQ, MIN_FREQ},
-            test_utils::test_signal,
+            test_utils::test_signal_json,
             utils::mixed_wave_signal,
             NoteName,
         },
@@ -45,7 +56,7 @@ pub mod hinted {
         file_sample_rate: f64,
         expected_note: NoteName,
     ) -> anyhow::Result<()> {
-        let signal = test_signal(samples_file)?;
+        let signal = test_signal_json(samples_file)?;
         assert_eq!(
             detector
                 .detect_note_with_hint_and_range(
@@ -90,7 +101,7 @@ pub fn test_fundamental_freq<D: PitchDetector>(
     expected_freq: f64,
 ) -> anyhow::Result<()> {
     pub const TEST_SAMPLE_RATE: f64 = 44000.0;
-    let signal = test_signal(samples_file)?;
+    let signal = test_signal_json(samples_file)?;
 
     let freq = detector
         .detect_pitch_in_range(&signal, TEST_SAMPLE_RATE, MIN_FREQ..MAX_FREQ)
