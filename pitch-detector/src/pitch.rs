@@ -5,7 +5,6 @@
 //! with fewer partials.
 //!
 mod cepstrum;
-mod core;
 mod hanned_fft;
 
 pub use cepstrum::PowerCepstrum;
