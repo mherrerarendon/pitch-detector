@@ -28,6 +28,7 @@ pub fn audio_buffer_to_signal(byte_buffer: &[u8]) -> Box<dyn Iterator<Item = f64
     Box::new(audio_buffer_to_samples(byte_buffer).map(|x| x as f64))
 }
 
+/// Fits the curve to which fft_point_x belongs to and returns the peak point
 pub fn interpolated_peak_at(spectrum: &[f64], fft_point_x: usize) -> Option<FftPoint> {
     let mut idx = fft_point_x;
     let peak_begin_idx = loop {

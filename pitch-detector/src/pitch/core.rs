@@ -16,6 +16,8 @@ where
         .sum::<usize>()
         / 2
 }
+
+// TODO: remove, this approach did not work
 pub fn zero_crossing_rate<I>(signal: I, sample_rate: f64) -> f64
 where
     I: IntoIterator,
