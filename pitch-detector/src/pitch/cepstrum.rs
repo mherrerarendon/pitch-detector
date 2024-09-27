@@ -60,7 +60,10 @@ impl SignalToSpectrum for PowerCepstrum {
         if self.fft_space.is_none() {
             self.fft_space = Some(FftSpace::new(signal.len()));
         }
-        self.fft_space.as_mut().unwrap().init_with_signal(signal);
+        self.fft_space
+            .as_mut()
+            .unwrap()
+            .init_with_signal(signal.iter());
         self.process_fft();
         let bin_range = match freq_range {
             Some((r, sample_rate)) => (

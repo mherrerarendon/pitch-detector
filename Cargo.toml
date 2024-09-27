@@ -3,6 +3,6 @@
 members = [
     "pitch-detector",
     "spectrum-plot"
-]
+, "tuner"]
 
 resolver = "2"

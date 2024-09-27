@@ -1,6 +1,5 @@
 use num_traits::Zero;
 use rustfft::num_complex::Complex;
-use std::borrow::Borrow;
 
 mod utils {
     use rustfft::num_complex::Complex;
@@ -83,22 +82,17 @@ impl FftSpace {
         (&mut self.space, &mut self.scratch)
     }
 
-    pub fn init_with_signal<I: IntoIterator>(&mut self, signal: I)
+    pub fn init_with_signal<Signal, Frame>(&mut self, signal: Signal)
     where
-        <I as IntoIterator>::Item: std::borrow::Borrow<f64>,
+        Signal: Iterator<Item = Frame>,
+        Frame: std::borrow::Borrow<f64>,
     {
-        let signal_iter = signal.into_iter();
-        let signal_len = signal_iter
-            .size_hint()
-            .1
-            .expect("Signal length is not known");
+        let signal_len = signal.size_hint().1.expect("Signal length is not known");
         assert!(signal_len <= self.space.len());
-        signal_iter
-            .zip(self.space.iter_mut())
-            .for_each(|(sample, fft)| {
-                fft.re = *sample.borrow();
-                fft.im = 0.0;
-            });
+        signal.zip(self.space.iter_mut()).for_each(|(sample, fft)| {
+            fft.re = *sample.borrow();
+            fft.im = 0.0;
+        });
         self.space[signal_len..]
             .iter_mut()
             .for_each(|o| *o = Complex::zero())
