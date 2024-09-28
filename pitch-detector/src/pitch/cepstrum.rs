@@ -3,7 +3,7 @@ use std::ops::Range;
 use crate::core::fft_space::FftSpace;
 use rustfft::{num_complex::Complex, FftPlanner};
 
-use super::{PitchDetector, SignalToSpectrum};
+use super::{PitchDetector, IntoFrequencyDomain};
 
 #[derive(Debug, Clone)]
 pub struct PowerCepstrum {
@@ -51,8 +51,8 @@ impl PowerCepstrum {
     }
 }
 
-impl SignalToSpectrum for PowerCepstrum {
-    fn signal_to_spectrum(
+impl IntoFrequencyDomain for PowerCepstrum {
+    fn into_frequency_domain(
         &mut self,
         signal: &[f64],
         freq_range: Option<(Range<f64>, f64)>,

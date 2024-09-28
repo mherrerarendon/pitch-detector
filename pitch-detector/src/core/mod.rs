@@ -2,6 +2,7 @@ use std::fmt;
 
 pub mod constants;
 pub mod fft_space;
+pub mod into_frequency_domain;
 pub mod utils;
 
 #[cfg(any(test, feature = "test_utils"))]
@@ -63,12 +64,12 @@ impl fmt::Display for NoteName {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct FftBin {
+pub struct FrequencyBin {
     pub bin: usize,
     pub magnitude: f64,
 }
 
-impl Default for FftBin {
+impl Default for FrequencyBin {
     fn default() -> Self {
         Self {
             bin: 0,
@@ -77,7 +78,7 @@ impl Default for FftBin {
     }
 }
 
-impl PartialOrd for FftBin {
+impl PartialOrd for FrequencyBin {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         self.magnitude.partial_cmp(&other.magnitude)
     }
@@ -95,8 +96,8 @@ impl Default for FftPoint {
     }
 }
 
-impl From<FftBin> for FftPoint {
-    fn from(bin: FftBin) -> Self {
+impl From<FrequencyBin> for FftPoint {
+    fn from(bin: FrequencyBin) -> Self {
         Self {
             x: bin.bin as f64,
             y: bin.magnitude,

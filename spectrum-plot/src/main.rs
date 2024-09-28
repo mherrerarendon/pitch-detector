@@ -1,6 +1,9 @@
 use pitch_detector::{
-    core::{test_utils::test_signal, utils::mixed_wave_signal},
-    pitch::{HannedFftDetector, PitchDetector, PowerCepstrum, SignalToSpectrum},
+    core::{
+        into_frequency_domain::IntoFrequencyDomain, test_utils::test_signal,
+        utils::mixed_wave_signal,
+    },
+    pitch::{HannedFftDetector, PitchDetector, PowerCepstrum},
     plot::plot_spectrum,
 };
 
@@ -8,7 +11,7 @@ const TEST_FILE_SAMPLE_RATE: f64 = 44000.;
 pub const MAX_FREQ: f64 = 1046.50; // C6
 pub const MIN_FREQ: f64 = 32.7; // C1
 
-fn plot_detector_for_files<D: PitchDetector + SignalToSpectrum>(
+fn plot_detector_for_files<D: PitchDetector + IntoFrequencyDomain>(
     mut detector: D,
     test_files: &[&str],
 ) -> anyhow::Result<()> {
@@ -25,7 +28,7 @@ fn plot_detector_for_files<D: PitchDetector + SignalToSpectrum>(
     Ok(())
 }
 
-fn plot_detector_for_freqs<D: PitchDetector + SignalToSpectrum>(
+fn plot_detector_for_freqs<D: PitchDetector + IntoFrequencyDomain>(
     mut detector: D,
     freq: Vec<f64>,
 ) -> anyhow::Result<()> {

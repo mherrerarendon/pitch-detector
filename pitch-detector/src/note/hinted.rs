@@ -2,14 +2,13 @@ mod peak_detector;
 use std::ops::Range;
 
 use crate::{
-    core::{utils::interpolated_peak_at, NoteName},
+    core::{into_frequency_domain::IntoFrequencyDomain, utils::interpolated_peak_at, NoteName},
     note::hinted::peak_detector::{PeakDetector, PeakFinderDetector},
-    pitch::SignalToSpectrum,
 };
 
 use super::note_detection_result::NoteDetectionResult;
 
-pub trait HintedNoteDetector: SignalToSpectrum {
+pub trait HintedNoteDetector: IntoFrequencyDomain {
     fn detect_note_with_hint(
         &mut self,
         note_hint: NoteName,
@@ -27,7 +26,7 @@ pub trait HintedNoteDetector: SignalToSpectrum {
         freq_range_hint: Option<Range<f64>>,
     ) -> Option<NoteDetectionResult> {
         let (start_bin, spectrum) =
-            self.signal_to_spectrum(signal, freq_range_hint.map(|r| (r, sample_rate)));
+            self.into_frequency_domain(signal, freq_range_hint.map(|r| (r, sample_rate)));
         const THRESHOLD: f64 = 6.;
         let peak_detector = PeakFinderDetector::new(THRESHOLD);
         let mut candidates = peak_detector.detect_peaks(&spectrum);

@@ -5,7 +5,7 @@ use plotters::{
     style::{IntoFont, RED, WHITE},
 };
 
-use crate::pitch::{PitchDetector, SignalToSpectrum};
+use crate::{core::into_frequency_domain::IntoFrequencyDomain, pitch::PitchDetector};
 
 pub fn plot_spectrum<D>(
     detector: &mut D,
@@ -15,7 +15,7 @@ pub fn plot_spectrum<D>(
     plot_name: &str,
 ) -> anyhow::Result<()>
 where
-    D: PitchDetector + SignalToSpectrum,
+    D: PitchDetector + IntoFrequencyDomain,
 {
     let max_freq = detector
         .detect_pitch_in_range(signal, sample_rate, freq_range.clone())
@@ -33,7 +33,8 @@ where
         format!("{} - {}", detector.name(), plot_name)
     );
 
-    let (start_bin, y_vals) = detector.signal_to_spectrum(signal, Some((freq_range, sample_rate)));
+    let (start_bin, y_vals) =
+        detector.into_frequency_domain(signal, Some((freq_range, sample_rate)));
     let x_vals: Vec<f64> = (start_bin..y_vals.len() + start_bin)
         .map(|x| x as f64)
         .collect();

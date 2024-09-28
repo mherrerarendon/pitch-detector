@@ -1,7 +1,7 @@
 use std::ops::Range;
 
 use crate::core::fft_space::FftSpace;
-use crate::pitch::SignalToSpectrum;
+use crate::pitch::IntoFrequencyDomain;
 use rustfft::FftPlanner;
 
 use super::PitchDetector;
@@ -53,8 +53,8 @@ impl HannedFftDetector {
     }
 }
 
-impl SignalToSpectrum for HannedFftDetector {
-    fn signal_to_spectrum(
+impl IntoFrequencyDomain for HannedFftDetector {
+    fn into_frequency_domain(
         &mut self,
         signal: &[f64],
         freq_range: Option<(Range<f64>, f64)>,
