@@ -4,14 +4,10 @@ use crate::core::fft_space::FftSpace;
 use crate::pitch::IntoFrequencyDomain;
 use rustfft::FftPlanner;
 
-use super::PitchDetector;
-
 #[derive(Debug, Clone)]
 pub struct HannedFftDetector {
     fft_space: Option<FftSpace>,
 }
-
-impl PitchDetector for HannedFftDetector {}
 
 impl Default for HannedFftDetector {
     fn default() -> Self {
@@ -97,18 +93,14 @@ impl IntoFrequencyDomain for HannedFftDetector {
         "rawfft"
     }
 }
-#[cfg(feature = "hinted")]
-mod hinted {
-    use crate::note::hinted::HintedNoteDetector;
-
-    use super::HannedFftDetector;
-    impl HintedNoteDetector for HannedFftDetector {}
-}
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::test_utils::{test_fundamental_freq, test_signal, test_sine_wave};
+    use crate::{
+        core::test_utils::{test_fundamental_freq, test_signal, test_sine_wave},
+        pitch::PitchDetector,
+    };
 
     #[test]
     fn test_from_sample_files() -> anyhow::Result<()> {

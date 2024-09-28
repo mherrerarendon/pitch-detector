@@ -3,14 +3,12 @@ use std::ops::Range;
 use crate::core::fft_space::FftSpace;
 use rustfft::{num_complex::Complex, FftPlanner};
 
-use super::{PitchDetector, IntoFrequencyDomain};
+use super::IntoFrequencyDomain;
 
 #[derive(Debug, Clone)]
 pub struct PowerCepstrum {
     fft_space: Option<FftSpace>,
 }
-
-impl PitchDetector for PowerCepstrum {}
 
 impl Default for PowerCepstrum {
     fn default() -> Self {

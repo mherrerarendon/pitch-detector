@@ -8,7 +8,7 @@ use crate::{
 
 use super::note_detection_result::NoteDetectionResult;
 
-pub trait HintedNoteDetector: IntoFrequencyDomain {
+pub trait HintedNoteDetector {
     fn detect_note_with_hint(
         &mut self,
         note_hint: NoteName,
@@ -18,6 +18,20 @@ pub trait HintedNoteDetector: IntoFrequencyDomain {
         self.detect_note_with_hint_and_range(note_hint, signal, sample_rate, None)
     }
 
+    fn detect_note_with_hint_and_range(
+        &mut self,
+        note_hint: NoteName,
+        signal: &[f64],
+        sample_rate: f64,
+        freq_range_hint: Option<Range<f64>>,
+    ) -> Option<NoteDetectionResult>;
+}
+
+#[cfg(feature = "hinted")]
+impl<T> HintedNoteDetector for T
+where
+    T: IntoFrequencyDomain,
+{
     fn detect_note_with_hint_and_range(
         &mut self,
         note_hint: NoteName,

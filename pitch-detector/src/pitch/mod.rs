@@ -19,7 +19,7 @@ use crate::core::{
     into_frequency_domain::IntoFrequencyDomain, utils::interpolated_peak_at, FftPoint,
 };
 
-pub trait PitchDetector: IntoFrequencyDomain {
+pub trait PitchDetector {
     /// The default implementation will detect within a conventional range of frequencies (20Hz to nyquist).
     /// If you want to detect a pitch in a specific range, use the [detect_pitch_in_range](Self::detect_pitch_in_range) method
     fn detect_pitch(&mut self, signal: &[f64], sample_rate: f64) -> Option<f64> {
@@ -29,6 +29,18 @@ pub trait PitchDetector: IntoFrequencyDomain {
     }
 
     /// Default implementation to detect a pitch within the specified frequency range.
+    fn detect_pitch_in_range(
+        &mut self,
+        signal: &[f64],
+        sample_rate: f64,
+        freq_range: Range<f64>,
+    ) -> Option<f64>;
+}
+
+impl<T> PitchDetector for T
+where
+    T: IntoFrequencyDomain,
+{
     fn detect_pitch_in_range(
         &mut self,
         signal: &[f64],
