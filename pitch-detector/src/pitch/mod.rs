@@ -10,9 +10,6 @@ mod hanned_fft;
 pub use cepstrum::PowerCepstrum;
 pub use hanned_fft::HannedFftDetector;
 
-// autocorrelation doesn't work well enough yet.
-// pub mod autocorrelation;
-
 use std::ops::Range;
 
 use crate::core::{

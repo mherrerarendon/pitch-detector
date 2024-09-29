@@ -12,6 +12,7 @@ pub fn plot_spectrum<D>(
     signal: &[f64],
     freq_range: Range<f64>,
     sample_rate: f64,
+    algorithm_name: &str,
     plot_name: &str,
 ) -> anyhow::Result<()>
 where
@@ -23,14 +24,12 @@ where
     let max_bin = detector.freq_to_bin(max_freq, sample_rate);
     let plot_title = format!(
         "{} - {} - {:.2} max bin",
-        detector.name(),
-        plot_name,
-        max_bin
+        algorithm_name, plot_name, max_bin
     );
     let output_file = format!(
         "{}/test_data/results/{}.png",
         env!("CARGO_MANIFEST_DIR"),
-        format!("{} - {}", detector.name(), plot_name)
+        format!("{} - {}", algorithm_name, plot_name)
     );
 
     let (start_bin, y_vals) =

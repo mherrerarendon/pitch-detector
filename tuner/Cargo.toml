@@ -4,3 +4,5 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+anyhow = "1.0.89"
+soundio = "0.2.1"

@@ -18,6 +18,4 @@ pub trait IntoFrequencyDomain {
 
     /// Translates frequency in hertz to frequency bin in frequency domain
     fn freq_to_bin(&self, freq: f64, sample_rate: f64) -> f64;
-
-    fn name(&self) -> &'static str;
 }

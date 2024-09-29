@@ -13,6 +13,7 @@ pub const MIN_FREQ: f64 = 32.7; // C1
 
 fn plot_detector_for_files<D: PitchDetector + IntoFrequencyDomain>(
     mut detector: D,
+    title: &str,
     test_files: &[&str],
 ) -> anyhow::Result<()> {
     for test_file in test_files {
@@ -22,6 +23,7 @@ fn plot_detector_for_files<D: PitchDetector + IntoFrequencyDomain>(
             &test_signal,
             MIN_FREQ..MAX_FREQ,
             TEST_FILE_SAMPLE_RATE,
+            title,
             test_file,
         )?;
     }
@@ -30,6 +32,7 @@ fn plot_detector_for_files<D: PitchDetector + IntoFrequencyDomain>(
 
 fn plot_detector_for_freqs<D: PitchDetector + IntoFrequencyDomain>(
     mut detector: D,
+    title: &str,
     freq: Vec<f64>,
 ) -> anyhow::Result<()> {
     const TEST_FILE_SAMPLE_RATE: f64 = 44100.;
@@ -40,6 +43,7 @@ fn plot_detector_for_freqs<D: PitchDetector + IntoFrequencyDomain>(
         &test_signal,
         MIN_FREQ..MAX_FREQ,
         TEST_FILE_SAMPLE_RATE,
+        title,
         "sine wave",
     )
 }
@@ -53,10 +57,10 @@ fn main() -> anyhow::Result<()> {
         // "noise.json",
     ];
 
-    plot_detector_for_files(PowerCepstrum::default(), &test_files)?;
-    plot_detector_for_files(HannedFftDetector::default(), &test_files)?;
+    plot_detector_for_files(PowerCepstrum::default(), "Power Cepstrum", &test_files)?;
+    plot_detector_for_files(HannedFftDetector::default(), "Hanned", &test_files)?;
 
-    plot_detector_for_freqs(HannedFftDetector::default(), vec![440.])?;
-    plot_detector_for_freqs(HannedFftDetector::default(), vec![440., 523.])?;
+    plot_detector_for_freqs(HannedFftDetector::default(), "Hanned", vec![440.])?;
+    plot_detector_for_freqs(HannedFftDetector::default(), "Hannded", vec![440., 523.])?;
     Ok(())
 }

@@ -88,10 +88,6 @@ impl IntoFrequencyDomain for HannedFftDetector {
             panic!("RawFftDetector needs to be initialized with a FftSpace first");
         }
     }
-
-    fn name(&self) -> &'static str {
-        "rawfft"
-    }
 }
 
 #[cfg(test)]

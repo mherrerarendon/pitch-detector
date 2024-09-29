@@ -82,10 +82,6 @@ impl IntoFrequencyDomain for PowerCepstrum {
     fn freq_to_bin(&self, freq: f64, sample_rate: f64) -> f64 {
         sample_rate / freq
     }
-
-    fn name(&self) -> &'static str {
-        "power"
-    }
 }
 
 #[cfg(test)]
