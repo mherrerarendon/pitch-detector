@@ -1,90 +1,92 @@
-fn read_callback(stream: &mut soundio::InStreamReader) {
-    let mut frames_left = stream.frame_count_max();
+mod note_renderers;
 
-    // libsoundio reads samples in chunks, so we need to loop until there's nothing to read.
-    loop {
-        if let Err(e) = stream.begin_read(frames_left) {
-            println!("Error reading from stream: {}", e);
-            return;
-        }
-        for f in 0..stream.frame_count() {
-            for c in 0..stream.channel_count() {
-                // In reality you shouldn't write to disk in the callback, but have some buffer instead.
-                todo!()
-            }
-        }
+use anyhow::Result;
+use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
+use cpal::Sample;
+use dasp_sample::ToSample;
+use pitch_detector::{core::NoteName, note::detect_note_in_range, pitch::HannedFftDetector};
 
-        frames_left -= stream.frame_count();
-        if frames_left <= 0 {
-            break;
-        }
+fn write_input_data<T>(input: &[T])
+where
+    T: Sample + ToSample<f64>,
+{
+    const SAMPLE_RATE: f64 = 44100.0;
+    const MAX_FREQ: f64 = 1046.50; // C6
+    const MIN_FREQ: f64 = 32.7; // C1
+    let mut detector = HannedFftDetector::default();
 
-        stream.end_read();
-    }
+    // TODO: maybe have the detector work in terms of the Sample trait instead of a specific type
+    let signal = input
+        .iter()
+        .map(|s| s.to_sample::<f64>())
+        .collect::<Vec<f64>>();
+
+    // TODO: handle unwrap
+    let note = detect_note_in_range(&signal, &mut detector, SAMPLE_RATE, MIN_FREQ..MAX_FREQ)
+        .ok_or(anyhow::anyhow!("Did not get note"))
+        .unwrap();
 }
-fn main() -> anyhow::Result<()> {
-    println!("Hello, world!");
-    // TODO: Probe which channels/sample rates are available.
-    let channels = 2;
-    let sample_rate = 44100;
 
-    let spec = hound::WavSpec {
-        channels: channels,
-        sample_rate: sample_rate,
-        bits_per_sample: 16,
-        sample_format: hound::SampleFormat::Int,
+fn main() -> anyhow::Result<()> {
+    let host = cpal::default_host();
+
+    // Set up the input device and stream with the default input config.
+    let device = host
+        .default_input_device()
+        .expect("failed to find input device");
+
+    println!("Input device: {}", device.name()?);
+
+    let config = device
+        .default_input_config()
+        .expect("Failed to get default input config");
+    println!("Default input config: {:?}", config);
+
+    // A flag to indicate that recording is in progress.
+    println!("Begin recording...");
+
+    // Run the input stream on a separate thread.
+
+    let err_fn = move |err| {
+        eprintln!("an error occurred on stream: {}", err);
     };
 
-    // Try to open the output file.
+    let stream = match config.sample_format() {
+        cpal::SampleFormat::I8 => device.build_input_stream(
+            &config.into(),
+            move |data, _: &_| write_input_data::<i8>(data),
+            err_fn,
+            None,
+        )?,
+        cpal::SampleFormat::I16 => device.build_input_stream(
+            &config.into(),
+            move |data, _: &_| write_input_data::<i16>(data),
+            err_fn,
+            None,
+        )?,
+        cpal::SampleFormat::I32 => device.build_input_stream(
+            &config.into(),
+            move |data, _: &_| write_input_data::<i32>(data),
+            err_fn,
+            None,
+        )?,
+        cpal::SampleFormat::F32 => device.build_input_stream(
+            &config.into(),
+            move |data, _: &_| write_input_data::<f32>(data),
+            err_fn,
+            None,
+        )?,
+        sample_format => {
+            return Err(anyhow::Error::msg(format!(
+                "Unsupported sample format '{sample_format}'"
+            )))
+        }
+    };
 
-    let mut ctx = soundio::Context::new();
-    ctx.set_app_name("Recorder");
-    ctx.connect()?;
+    stream.play()?;
 
-    println!("Current backend: {:?}", ctx.current_backend());
-
-    // We have to flush events so we can scan devices.
-    ctx.flush_events();
-    // I guess these are always signed little endian?
-    let soundio_format = soundio::Format::S16LE;
-
-    let default_layout = soundio::ChannelLayout::get_default(channels as _);
-    println!(
-        "Default layout for {} channel(s): {:?}",
-        channels, default_layout
-    );
-
-    let input_dev = ctx
-        .default_input_device()
-        .map_err(|_| "Error getting default input device".to_string())?;
-
-    println!(
-        "Default input device: {} {}",
-        input_dev.name(),
-        if input_dev.is_raw() { "raw" } else { "cooked" }
-    );
-
-    let mut recorder = WavRecorder { writer: writer };
-
-    println!("Opening default input stream");
-    let mut input_stream = input_dev.open_instream(
-        sample_rate as _,
-        soundio_format,
-        default_layout,
-        0.1,
-        |x| recorder.read_callback(x),
-        None::<fn()>,
-        None::<fn(soundio::Error)>,
-    )?;
-
-    println!("Starting stream");
-    input_stream.start()?;
-
-    // Wait for the user to press a key.
-    println!("Press enter to stop recording");
-    let stdin = io::stdin();
-    let input = &mut String::new();
-    let _ = stdin.read_line(input);
-
+    // Let recording go for roughly three seconds.
+    std::thread::sleep(std::time::Duration::from_secs(3));
+    drop(stream);
     Ok(())
 }
