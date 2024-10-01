@@ -8,3 +8,5 @@ pub const NOTES: [&str; 12] = [
 
 // Noticable pitch difference starts at around 10-25 cents
 pub const MAX_CENTS_OFFSET: f64 = 10.0;
+
+pub const NUM_CENTS_BETWEEN_NOTES: f64 = 100.;
