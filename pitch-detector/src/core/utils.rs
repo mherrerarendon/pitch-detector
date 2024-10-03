@@ -1,6 +1,6 @@
 use fitting::gaussian::fit;
 
-use super::FftPoint;
+use super::{error::PitchError, FftPoint};
 
 pub fn sine_wave_signal(num_samples: usize, freq: f64, sample_rate: f64) -> Vec<f64> {
     (0..num_samples)
@@ -29,7 +29,7 @@ pub fn audio_buffer_to_signal(byte_buffer: &[u8]) -> Box<dyn Iterator<Item = f64
 }
 
 /// Fits the curve to which fft_point_x belongs to and returns the peak point
-pub fn interpolated_peak_at(spectrum: &[f64], fft_point_x: usize) -> Option<FftPoint> {
+pub fn interpolated_peak_at(spectrum: &[f64], fft_point_x: usize) -> Result<FftPoint, PitchError> {
     let mut idx = fft_point_x;
     let peak_begin_idx = loop {
         if idx == 0 {
@@ -60,27 +60,30 @@ pub fn interpolated_peak_at(spectrum: &[f64], fft_point_x: usize) -> Option<FftP
 
     assert_eq!(y_vals.len(), x_vals.len(), "Sanity check failed");
     match x_vals.len() {
-        0 => None,
-        1 => Some(FftPoint {
+        0 => Err(PitchError::IncorrectParameters(
+            "Expected at least one x value".to_string(),
+        )),
+        1 => Ok(FftPoint {
             x: x_vals[0],
             y: y_vals[0],
         }),
         2 => {
             if y_vals[0] > y_vals[1] {
-                Some(FftPoint {
+                Ok(FftPoint {
                     x: x_vals[0],
                     y: y_vals[0],
                 })
             } else {
-                Some(FftPoint {
+                Ok(FftPoint {
                     x: x_vals[1],
                     y: y_vals[1],
                 })
             }
         }
         _ => {
-            let (mu, _, a) = fit(x_vals.into(), y_vals.into()).ok()?;
-            Some(FftPoint { x: mu, y: a })
+            let (mu, _, a) = fit(x_vals.into(), y_vals.into())
+                .map_err(|e| PitchError::UnexpectedError(e.to_string()))?;
+            Ok(FftPoint { x: mu, y: a })
         }
     }
 }

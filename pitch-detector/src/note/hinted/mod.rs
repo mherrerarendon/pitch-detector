@@ -1,4 +1,4 @@
-mod peak_detector;
+pub mod peak_detector;
 use std::ops::Range;
 
 use crate::{

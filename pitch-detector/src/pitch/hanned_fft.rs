@@ -1,5 +1,6 @@
 use std::ops::Range;
 
+use crate::core::error::PitchError;
 use crate::core::fft_space::FftSpace;
 use crate::core::utils::interpolated_peak_at;
 use crate::core::FftPoint;
@@ -100,22 +101,19 @@ impl PitchDetector for HannedFftDetector {
         signal: &[f64],
         sample_rate: f64,
         freq_range: Range<f64>,
-    ) -> Option<f64> {
+    ) -> Result<f64, PitchError> {
         let (start_bin, spectrum) =
             self.into_frequency_domain(signal, Some((freq_range, sample_rate)));
-        let max_bin =
-            spectrum.iter().enumerate().reduce(
-                |accum, item| {
-                    if item.1 > accum.1 {
-                        item
-                    } else {
-                        accum
-                    }
-                },
-            )?;
+        let max_bin = spectrum
+            .iter()
+            .enumerate()
+            .reduce(|accum, item| if item.1 > accum.1 { item } else { accum })
+            .ok_or(PitchError::IncorrectParameters(
+                "Spectrum had no elements".to_string(),
+            ))?;
 
         let FftPoint { x: bin, .. } = interpolated_peak_at(&spectrum, max_bin.0)?;
-        Some(self.bin_to_freq(bin + start_bin as f64, sample_rate))
+        Ok(self.bin_to_freq(bin + start_bin as f64, sample_rate))
     }
 }
 
@@ -147,7 +145,7 @@ mod tests {
         let signal = test_signal("noise.json")?;
 
         let mut detector = HannedFftDetector::default();
-        assert!(detector.detect_pitch(&signal, TEST_SAMPLE_RATE).is_none());
+        assert!(detector.detect_pitch(&signal, TEST_SAMPLE_RATE).is_err());
 
         Ok(())
     }

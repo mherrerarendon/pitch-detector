@@ -1,6 +1,7 @@
 use std::fmt;
 
 pub mod constants;
+pub mod error;
 pub mod fft_space;
 pub mod into_frequency_domain;
 pub mod utils;

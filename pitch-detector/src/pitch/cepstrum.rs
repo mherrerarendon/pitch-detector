@@ -1,6 +1,9 @@
 use std::ops::Range;
 
-use crate::core::{fft_space::FftSpace, utils::interpolated_peak_at, FftPoint};
+use crate::{
+    core::{error::PitchError, fft_space::FftSpace, utils::interpolated_peak_at, FftPoint},
+    note::hinted::peak_detector::{PeakDetector, PeakFinderDetector},
+};
 use rustfft::{num_complex::Complex, FftPlanner};
 
 use super::{IntoFrequencyDomain, PitchDetector};
@@ -84,28 +87,34 @@ impl IntoFrequencyDomain for PowerCepstrum {
     }
 }
 
+/// The dominant peak needs to be at least THRESHOLD in proportion to the second highest peak
+/// in order to be considered dominant enough.
+const THRESHOLD: f64 = 1.25;
+
 impl PitchDetector for PowerCepstrum {
     fn detect_pitch_in_range(
         &mut self,
         signal: &[f64],
         sample_rate: f64,
         freq_range: Range<f64>,
-    ) -> Option<f64> {
+    ) -> Result<f64, PitchError> {
         let (start_bin, spectrum) =
             self.into_frequency_domain(signal, Some((freq_range, sample_rate)));
-        let max_bin =
-            spectrum.iter().enumerate().reduce(
-                |accum, item| {
-                    if item.1 > accum.1 {
-                        item
-                    } else {
-                        accum
-                    }
-                },
-            )?;
-
-        let FftPoint { x: bin, .. } = interpolated_peak_at(&spectrum, max_bin.0)?;
-        Some(self.bin_to_freq(bin + start_bin as f64, sample_rate))
+        const SIGMAS: f64 = 6.;
+        let peak_detector = PeakFinderDetector::new(SIGMAS);
+        let mut candidates = peak_detector.detect_peaks(&spectrum);
+        candidates.sort_by(|a, b| b.partial_cmp(&a).unwrap());
+        match (candidates.get(0), candidates.get(1)) {
+            (Some(freq_bin), Some(freq_bin_2)) => {
+                if freq_bin.magnitude / freq_bin_2.magnitude > THRESHOLD {
+                    let FftPoint { x: bin, .. } = interpolated_peak_at(&spectrum, freq_bin.bin)?;
+                    Ok(self.bin_to_freq(bin + start_bin as f64, sample_rate))
+                } else {
+                    None
+                }
+            }
+            _ => None,
+        }
     }
 }
 

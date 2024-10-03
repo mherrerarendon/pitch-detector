@@ -23,7 +23,6 @@ path = "src/lib.rs"
 
 [features]
 test_utils = ["serde", "serde_json", "float-cmp"]
-# hinted =["smoothed_z_score", "peak_finder"]
 hinted =["peak_finder"]
 plot = ["plotters"]
 
