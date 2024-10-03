@@ -1,49 +1,54 @@
 mod note_renderers;
 
-use anyhow::Result;
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
-use cpal::Sample;
+use cpal::{Device, Sample, StreamConfig, SupportedBufferSize, SupportedStreamConfig};
 use dasp_sample::ToSample;
-use pitch_detector::{core::NoteName, note::detect_note_in_range, pitch::HannedFftDetector};
+use note_renderers::cmd_line::CmdLineNoteRenderer;
+use note_renderers::NoteRenderer;
+use pitch_detector::pitch::PowerCepstrum;
+use pitch_detector::{note::detect_note_in_range, pitch::HannedFftDetector};
+use tokio::select;
+use tokio_util::sync::CancellationToken;
 
-fn write_input_data<T>(input: &[T])
+#[tracing::instrument(skip_all)]
+fn write_input_data<T, Renderer>(input: &[T], renderer: &mut Renderer)
 where
     T: Sample + ToSample<f64>,
+    Renderer: NoteRenderer,
 {
     const SAMPLE_RATE: f64 = 44100.0;
     const MAX_FREQ: f64 = 1046.50; // C6
     const MIN_FREQ: f64 = 32.7; // C1
-    let mut detector = HannedFftDetector::default();
+    let mut detector = PowerCepstrum::default();
 
     // TODO: maybe have the detector work in terms of the Sample trait instead of a specific type
+    // to avoid another allocation
     let signal = input
         .iter()
         .map(|s| s.to_sample::<f64>())
         .collect::<Vec<f64>>();
 
-    // TODO: handle unwrap
-    let note = detect_note_in_range(&signal, &mut detector, SAMPLE_RATE, MIN_FREQ..MAX_FREQ)
-        .ok_or(anyhow::anyhow!("Did not get note"))
-        .unwrap();
+    if let Some(note) =
+        detect_note_in_range(&signal, &mut detector, SAMPLE_RATE, MIN_FREQ..MAX_FREQ)
+    {
+        // TODO: handle unwrap
+        renderer.render_note(note).unwrap();
+    } else {
+        renderer.render_no_note().unwrap();
+    }
 }
 
-fn main() -> anyhow::Result<()> {
-    let host = cpal::default_host();
-
-    // Set up the input device and stream with the default input config.
-    let device = host
-        .default_input_device()
-        .expect("failed to find input device");
-
-    println!("Input device: {}", device.name()?);
-
-    let config = device
-        .default_input_config()
-        .expect("Failed to get default input config");
-    println!("Default input config: {:?}", config);
-
+async fn listen_audio<Renderer>(
+    config: StreamConfig,
+    device: Device,
+    mut renderer: Renderer,
+) -> anyhow::Result<()>
+where
+    Renderer: NoteRenderer + Send + 'static,
+{
     // A flag to indicate that recording is in progress.
     println!("Begin recording...");
+    renderer.input_start()?;
 
     // Run the input stream on a separate thread.
 
@@ -51,42 +56,104 @@ fn main() -> anyhow::Result<()> {
         eprintln!("an error occurred on stream: {}", err);
     };
 
-    let stream = match config.sample_format() {
-        cpal::SampleFormat::I8 => device.build_input_stream(
-            &config.into(),
-            move |data, _: &_| write_input_data::<i8>(data),
-            err_fn,
-            None,
-        )?,
-        cpal::SampleFormat::I16 => device.build_input_stream(
-            &config.into(),
-            move |data, _: &_| write_input_data::<i16>(data),
-            err_fn,
-            None,
-        )?,
-        cpal::SampleFormat::I32 => device.build_input_stream(
-            &config.into(),
-            move |data, _: &_| write_input_data::<i32>(data),
-            err_fn,
-            None,
-        )?,
-        cpal::SampleFormat::F32 => device.build_input_stream(
-            &config.into(),
-            move |data, _: &_| write_input_data::<f32>(data),
-            err_fn,
-            None,
-        )?,
-        sample_format => {
-            return Err(anyhow::Error::msg(format!(
-                "Unsupported sample format '{sample_format}'"
-            )))
-        }
-    };
+    let stream = device.build_input_stream(
+        &config.into(),
+        move |data, _: &_| write_input_data::<f32, _>(data, &mut renderer),
+        err_fn,
+        None,
+    )?;
+
+    // let stream = match config.sample_format() {
+    //     cpal::SampleFormat::I8 => device.build_input_stream(
+    //         &config.into(),
+    //         move |data, _: &_| write_input_data::<i8, _>(data, &mut renderer),
+    //         err_fn,
+    //         None,
+    //     )?,
+    //     cpal::SampleFormat::I16 => device.build_input_stream(
+    //         &config.into(),
+    //         move |data, _: &_| write_input_data::<i16, _>(data, &mut renderer),
+    //         err_fn,
+    //         None,
+    //     )?,
+    //     cpal::SampleFormat::I32 => device.build_input_stream(
+    //         &config.into(),
+    //         move |data, _: &_| write_input_data::<i32, _>(data, &mut renderer),
+    //         err_fn,
+    //         None,
+    //     )?,
+    //     cpal::SampleFormat::F32 => device.build_input_stream(
+    //         &config.into(),
+    //         move |data, _: &_| write_input_data::<f32, _>(data, &mut renderer),
+    //         err_fn,
+    //         None,
+    //     )?,
+    //     sample_format => {
+    //         return Err(anyhow::Error::msg(format!(
+    //             "Unsupported sample format '{sample_format}'"
+    //         )))
+    //     }
+    // };
 
     stream.play()?;
 
-    // Let recording go for roughly three seconds.
-    std::thread::sleep(std::time::Duration::from_secs(3));
-    drop(stream);
+    let token = CancellationToken::new();
+    let cloned_token = token.clone();
+
+    select! {
+        _ = cloned_token.cancelled() => {
+            // The token was cancelled
+        }
+        _ = tokio::time::sleep(std::time::Duration::from_secs(9999)) => {
+        }
+    };
+
+    Ok(())
+}
+
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
+    tracing_subscriber::fmt::init();
+
+    let host = cpal::default_host();
+
+    // Set up the input device and stream with the default input config.
+    let device = host
+        .default_input_device()
+        .expect("failed to find input device");
+
+    let config = device.default_input_config()?;
+    println!("supported buffer size: {:?}", config.buffer_size());
+
+    // Set the buffer size to the maximum supported value. The larger the buffer, the more accurate the
+    // pitch detection algorithm
+    let buffer_size = match &config.buffer_size() {
+        SupportedBufferSize::Range { min: _, max } => SupportedBufferSize::Range {
+            min: *max,
+            max: *max,
+        },
+        SupportedBufferSize::Unknown => SupportedBufferSize::Unknown,
+    };
+    let config = SupportedStreamConfig::new(
+        config.channels(),
+        config.sample_rate(),
+        buffer_size,
+        config.sample_format(),
+    );
+    let config = StreamConfig {
+        channels: config.channels(),
+        sample_rate: config.sample_rate(),
+        // The 'buffer_size' is actually specified in the Stream creation
+        // as the number of frames (i.e., samples per channel)
+        buffer_size: cpal::BufferSize::Fixed(4096), // Fixed buffer size
+    };
+
+    println!("Input device: {}", device.name()?);
+
+    println!("Input config: {:?}", config);
+
+    let cmd_line_renderer = CmdLineNoteRenderer::new_with_rows_and_columns(50, 10);
+    listen_audio(config, device, cmd_line_renderer).await?;
+
     Ok(())
 }

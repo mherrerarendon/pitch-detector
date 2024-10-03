@@ -1,0 +1,3 @@
+[alias]
+pitch = ["test", "--features", "hinted"]
+benchmark = ["criterion", "--features", "test_utils"]
