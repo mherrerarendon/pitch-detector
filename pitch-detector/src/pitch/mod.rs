@@ -33,31 +33,3 @@ pub trait PitchDetector {
         freq_range: Range<f64>,
     ) -> Option<f64>;
 }
-
-impl<T> PitchDetector for T
-where
-    T: IntoFrequencyDomain,
-{
-    fn detect_pitch_in_range(
-        &mut self,
-        signal: &[f64],
-        sample_rate: f64,
-        freq_range: Range<f64>,
-    ) -> Option<f64> {
-        let (start_bin, spectrum) =
-            self.into_frequency_domain(signal, Some((freq_range, sample_rate)));
-        let max_bin =
-            spectrum.iter().enumerate().reduce(
-                |accum, item| {
-                    if item.1 > accum.1 {
-                        item
-                    } else {
-                        accum
-                    }
-                },
-            )?;
-
-        let FftPoint { x: bin, .. } = interpolated_peak_at(&spectrum, max_bin.0)?;
-        Some(self.bin_to_freq(bin + start_bin as f64, sample_rate))
-    }
-}

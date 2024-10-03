@@ -1,9 +1,9 @@
 use std::ops::Range;
 
-use crate::core::fft_space::FftSpace;
+use crate::core::{fft_space::FftSpace, utils::interpolated_peak_at, FftPoint};
 use rustfft::{num_complex::Complex, FftPlanner};
 
-use super::IntoFrequencyDomain;
+use super::{IntoFrequencyDomain, PitchDetector};
 
 #[derive(Debug, Clone)]
 pub struct PowerCepstrum {
@@ -81,6 +81,31 @@ impl IntoFrequencyDomain for PowerCepstrum {
     }
     fn freq_to_bin(&self, freq: f64, sample_rate: f64) -> f64 {
         sample_rate / freq
+    }
+}
+
+impl PitchDetector for PowerCepstrum {
+    fn detect_pitch_in_range(
+        &mut self,
+        signal: &[f64],
+        sample_rate: f64,
+        freq_range: Range<f64>,
+    ) -> Option<f64> {
+        let (start_bin, spectrum) =
+            self.into_frequency_domain(signal, Some((freq_range, sample_rate)));
+        let max_bin =
+            spectrum.iter().enumerate().reduce(
+                |accum, item| {
+                    if item.1 > accum.1 {
+                        item
+                    } else {
+                        accum
+                    }
+                },
+            )?;
+
+        let FftPoint { x: bin, .. } = interpolated_peak_at(&spectrum, max_bin.0)?;
+        Some(self.bin_to_freq(bin + start_bin as f64, sample_rate))
     }
 }
 
