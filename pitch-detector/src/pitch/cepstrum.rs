@@ -11,11 +11,54 @@ use super::{IntoFrequencyDomain, PitchDetector};
 #[derive(Debug, Clone)]
 pub struct PowerCepstrum {
     fft_space: Option<FftSpace>,
+
+    /// `sigmas` is used to determine how many standard deviations should be used to determine the significance of the
+    /// peaks in the fft spectrum. For example, if a value of 1 is used, then all peak heights within one standard
+    /// deviation will be considered as candidates for pitch detection
+    sigmas: f64,
+
+    /// Of the candidate peaks that will be used for pitch determination, how much prominent should the best candidate
+    /// be compared to the next candidate in order to be considered a pitch detection
+    prominence_threshold: f64,
+}
+
+impl PowerCepstrum {
+    /// Get reasonable `sigmas` and `prominence_threshold` values for reasonable pitch detection success
+    pub fn new_with_defaults() -> Self {
+        Self {
+            sigmas: 6.,
+            prominence_threshold: 1.25,
+            ..Default::default()
+        }
+    }
+
+    pub fn new(sigmas: f64, prominence_threshold: f64) -> Self {
+        Self {
+            fft_space: None,
+            sigmas,
+            prominence_threshold,
+        }
+    }
+
+    pub fn with_sigmas(self, sigmas: f64) -> Self {
+        Self { sigmas, ..self }
+    }
+
+    pub fn with_promince_threshold(self, prominence_threshold: f64) -> Self {
+        Self {
+            prominence_threshold,
+            ..self
+        }
+    }
 }
 
 impl Default for PowerCepstrum {
     fn default() -> Self {
-        Self { fft_space: None }
+        Self {
+            fft_space: None,
+            sigmas: 0.,
+            prominence_threshold: 0.,
+        }
     }
 }
 
@@ -87,10 +130,6 @@ impl IntoFrequencyDomain for PowerCepstrum {
     }
 }
 
-/// The dominant peak needs to be at least THRESHOLD in proportion to the second highest peak
-/// in order to be considered dominant enough.
-const THRESHOLD: f64 = 1.25;
-
 impl PitchDetector for PowerCepstrum {
     fn detect_pitch_in_range(
         &mut self,
@@ -100,13 +139,12 @@ impl PitchDetector for PowerCepstrum {
     ) -> Result<f64, PitchError> {
         let (start_bin, spectrum) =
             self.into_frequency_domain(signal, Some((freq_range, sample_rate)));
-        const SIGMAS: f64 = 6.;
-        let peak_detector = PeakFinderDetector::new(SIGMAS);
+        let peak_detector = PeakFinderDetector::new(self.sigmas);
         let mut candidates = peak_detector.detect_peaks(&spectrum);
         candidates.sort_by(|a, b| b.partial_cmp(&a).unwrap());
         match (candidates.get(0), candidates.get(1)) {
             (Some(freq_bin), Some(freq_bin_2)) => {
-                if freq_bin.magnitude / freq_bin_2.magnitude > THRESHOLD {
+                if freq_bin.magnitude / freq_bin_2.magnitude > self.prominence_threshold {
                     let FftPoint { x: bin, .. } = interpolated_peak_at(&spectrum, freq_bin.bin)?;
                     Ok(self.bin_to_freq(bin + start_bin as f64, sample_rate))
                 } else {

@@ -120,7 +120,7 @@ impl NoteRenderer for CmdLineNoteRenderer {
             stdout,
             terminal::Clear(ClearType::CurrentLine),
             cursor::MoveToColumn(0),
-            style::Print(error.to_string())
+            // style::Print(error.to_string())
         )?;
         stdout.flush()?;
         Ok(())

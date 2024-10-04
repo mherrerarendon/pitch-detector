@@ -1,7 +1,7 @@
 mod note_renderers;
 
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
-use cpal::{Device, Sample, StreamConfig, SupportedBufferSize, SupportedStreamConfig};
+use cpal::{Device, Sample, StreamConfig};
 use dasp_sample::ToSample;
 use note_renderers::cmd_line::CmdLineNoteRenderer;
 use note_renderers::NoteRenderer;
@@ -19,7 +19,7 @@ where
     const SAMPLE_RATE: f64 = 44100.0;
     const MAX_FREQ: f64 = 1046.50; // C6
     const MIN_FREQ: f64 = 32.7; // C1
-    let mut detector = PowerCepstrum::default();
+    let mut detector = PowerCepstrum::new_with_defaults().with_sigmas(1.);
 
     // TODO: maybe have the detector work in terms of the Sample trait instead of a specific type
     // to avoid another allocation
@@ -60,38 +60,6 @@ where
         None,
     )?;
 
-    // let stream = match config.sample_format() {
-    //     cpal::SampleFormat::I8 => device.build_input_stream(
-    //         &config.into(),
-    //         move |data, _: &_| write_input_data::<i8, _>(data, &mut renderer),
-    //         err_fn,
-    //         None,
-    //     )?,
-    //     cpal::SampleFormat::I16 => device.build_input_stream(
-    //         &config.into(),
-    //         move |data, _: &_| write_input_data::<i16, _>(data, &mut renderer),
-    //         err_fn,
-    //         None,
-    //     )?,
-    //     cpal::SampleFormat::I32 => device.build_input_stream(
-    //         &config.into(),
-    //         move |data, _: &_| write_input_data::<i32, _>(data, &mut renderer),
-    //         err_fn,
-    //         None,
-    //     )?,
-    //     cpal::SampleFormat::F32 => device.build_input_stream(
-    //         &config.into(),
-    //         move |data, _: &_| write_input_data::<f32, _>(data, &mut renderer),
-    //         err_fn,
-    //         None,
-    //     )?,
-    //     sample_format => {
-    //         return Err(anyhow::Error::msg(format!(
-    //             "Unsupported sample format '{sample_format}'"
-    //         )))
-    //     }
-    // };
-
     stream.play()?;
 
     let token = CancellationToken::new();
@@ -99,7 +67,6 @@ where
 
     select! {
         _ = cloned_token.cancelled() => {
-            // The token was cancelled
         }
         _ = tokio::time::sleep(std::time::Duration::from_secs(9999)) => {
         }
@@ -124,19 +91,6 @@ async fn main() -> anyhow::Result<()> {
 
     // Set the buffer size to the maximum supported value. The larger the buffer, the more accurate the
     // pitch detection algorithm
-    let buffer_size = match &config.buffer_size() {
-        SupportedBufferSize::Range { min: _, max } => SupportedBufferSize::Range {
-            min: *max,
-            max: *max,
-        },
-        SupportedBufferSize::Unknown => SupportedBufferSize::Unknown,
-    };
-    let config = SupportedStreamConfig::new(
-        config.channels(),
-        config.sample_rate(),
-        buffer_size,
-        config.sample_format(),
-    );
     let config = StreamConfig {
         channels: config.channels(),
         sample_rate: config.sample_rate(),
