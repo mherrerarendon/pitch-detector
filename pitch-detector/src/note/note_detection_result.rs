@@ -1,5 +1,6 @@
 use crate::core::{
     constants::{A4_FREQ, MAX_CENTS_OFFSET, MIN_FREQ, NOTES},
+    error::PitchError,
     NoteName,
 };
 
@@ -36,10 +37,13 @@ pub struct NoteDetectionResult {
 }
 
 impl TryFrom<f64> for NoteDetectionResult {
-    type Error = anyhow::Error;
+    type Error = PitchError;
     fn try_from(freq: f64) -> Result<Self, Self::Error> {
         if freq < MIN_FREQ {
-            return Err(anyhow::anyhow!("Invalid frequency: {}", freq));
+            return Err(PitchError::IncorrectParameters(format!(
+                "Invalid frequency: {}",
+                freq
+            )));
         }
         let steps_from_a4 = (freq / A4_FREQ).log2() * 12.0;
         let note_freq = A4_FREQ * 2f64.powf(steps_from_a4.round() / 12.0);

@@ -4,6 +4,7 @@ use std::{error::Error, fmt::Display};
 pub enum PitchError {
     UnexpectedError(String),
     IncorrectParameters(String),
+    NoPitchDetected(String),
 }
 
 impl Display for PitchError {
@@ -13,6 +14,7 @@ impl Display for PitchError {
             PitchError::IncorrectParameters(msg) => {
                 writeln!(f, "Incorrect Parameters Error: {}", msg)
             }
+            PitchError::NoPitchDetected(msg) => writeln!(f, "No Pitch Detected Error: {}", msg),
         }
     }
 }

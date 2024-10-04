@@ -2,7 +2,7 @@ use std::ops::Range;
 
 use crate::{
     core::{error::PitchError, fft_space::FftSpace, utils::interpolated_peak_at, FftPoint},
-    note::hinted::peak_detector::{PeakDetector, PeakFinderDetector},
+    note::peak_detector::{PeakDetector, PeakFinderDetector},
 };
 use rustfft::{num_complex::Complex, FftPlanner};
 
@@ -110,10 +110,16 @@ impl PitchDetector for PowerCepstrum {
                     let FftPoint { x: bin, .. } = interpolated_peak_at(&spectrum, freq_bin.bin)?;
                     Ok(self.bin_to_freq(bin + start_bin as f64, sample_rate))
                 } else {
-                    None
+                    Err(PitchError::NoPitchDetected("Dominant pitch did not exceed threshold to be considered a pitch detection".to_string()))
                 }
             }
-            _ => None,
+            (Some(freq_bin), None) => {
+                let FftPoint { x: bin, .. } = interpolated_peak_at(&spectrum, freq_bin.bin)?;
+                Ok(self.bin_to_freq(bin + start_bin as f64, sample_rate))
+            }
+            _ => Err(PitchError::IncorrectParameters(
+                "Expected to have at least one bin value".to_string(),
+            )),
         }
     }
 }

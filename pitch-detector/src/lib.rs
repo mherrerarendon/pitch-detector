@@ -6,7 +6,7 @@
 //! use pitch_detector::{
 //!     pitch::{HannedFftDetector, PitchDetector},
 //! };
-//! # fn example_detect_frequency() -> Option<()> {
+//! # fn example_detect_frequency() -> anyhow::Result<()> {
 //! # const NUM_SAMPLES: usize = 16384;
 //! # const SAMPLE_RATE: f64 = 44100.0;
 //!
@@ -14,7 +14,7 @@
 //! let signal: Vec<f64> = Vec::new(); // Signal to analyze
 //! let freq: f64 = detector
 //!     .detect_pitch(&signal, SAMPLE_RATE)?;
-//! # None
+//! # Ok(())
 //! # }
 //! ```
 //!
@@ -29,7 +29,7 @@
 //!     note::{detect_note},
 //!     pitch::{HannedFftDetector, PitchDetector},
 //! };
-//! # fn example_detect_note() -> Option<()> {
+//! # fn example_detect_note() -> anyhow::Result<()> {
 //! # const NUM_SAMPLES: usize = 16384;
 //! # const SAMPLE_RATE: f64 = 44100.0;
 //!
@@ -44,7 +44,7 @@
 //!
 //! assert_eq!(note.note_name, NoteName::A);
 //! assert!(note.cents_offset > 0.);
-//! # None
+//! # Ok(())
 //! # }
 //! ```
 //!
@@ -59,7 +59,7 @@
 //!     note::{hinted::HintedNoteDetector},
 //!     pitch::{HannedFftDetector, PitchDetector},
 //! };
-//! # fn example_hinted_note() -> Option<()> {
+//! # fn example_hinted_note() -> anyhow::Result<()> {
 //! # const NUM_SAMPLES: usize = 16384;
 //! # const SAMPLE_RATE: f64 = 44100.0;
 //!
@@ -76,7 +76,7 @@
 //!
 //! assert_eq!(note.note_name, NoteName::A);
 //! assert!(note.cents_offset > 0.);
-//! # None
+//! # Ok(())
 //! # }
 //! ```
 //!

@@ -1,11 +1,12 @@
 mod note_detection_result;
+pub mod peak_detector;
 
 #[cfg(feature = "hinted")]
 pub mod hinted;
 
 use std::ops::Range;
 
-use crate::pitch::PitchDetector;
+use crate::{core::error::PitchError, pitch::PitchDetector};
 
 pub use self::note_detection_result::NoteDetectionResult;
 
@@ -19,7 +20,7 @@ pub use self::note_detection_result::NoteDetectionResult;
 ///     note::{detect_note},
 ///     pitch::{HannedFftDetector, PitchDetector},
 /// };
-/// # fn example_detect_note() -> Option<()> {
+/// # fn example_detect_note() -> anyhow::Result<()> {
 /// # const NUM_SAMPLES: usize = 16384;
 /// # const SAMPLE_RATE: f64 = 44100.0;
 //
@@ -34,14 +35,14 @@ pub use self::note_detection_result::NoteDetectionResult;
 //
 /// assert_eq!(note.note_name, NoteName::A);
 /// assert!(note.cents_offset > 0.);
-/// # None
+/// # Ok(())
 /// # }
 /// ```
 pub fn detect_note<D: PitchDetector>(
     signal: &[f64],
     freq_detector: &mut D,
     sample_rate: f64,
-) -> Option<NoteDetectionResult> {
+) -> Result<NoteDetectionResult, PitchError> {
     let nyquist_freq = sample_rate / 2.;
     let min_freq = 20.; // Conventional minimum frequency for human hearing
     detect_note_in_range(signal, freq_detector, sample_rate, min_freq..nyquist_freq)
@@ -55,7 +56,7 @@ pub fn detect_note<D: PitchDetector>(
 ///     note::{detect_note_in_range},
 ///     pitch::{HannedFftDetector, PitchDetector},
 /// };
-/// # fn example_detect_note() -> Option<()> {
+/// # fn example_detect_note() -> anyhow::Result<()> {
 /// # const NUM_SAMPLES: usize = 16384;
 /// # const SAMPLE_RATE: f64 = 44100.0;
 /// const MAX_FREQ: f64 = 1046.50; // C6
@@ -81,8 +82,8 @@ pub fn detect_note<D: PitchDetector>(
 ///     SAMPLE_RATE,
 ///     MIN_FREQ..MAX_FREQ,
 /// );
-/// assert!(note.is_none());
-/// # None
+/// assert!(note.is_err());
+/// # Ok(())
 /// # }
 /// ```
 pub fn detect_note_in_range<D: PitchDetector>(
@@ -90,8 +91,8 @@ pub fn detect_note_in_range<D: PitchDetector>(
     freq_detector: &mut D,
     sample_rate: f64,
     freq_range: Range<f64>,
-) -> Option<NoteDetectionResult> {
+) -> Result<NoteDetectionResult, PitchError> {
     freq_detector
         .detect_pitch_in_range(signal, sample_rate, freq_range)
-        .and_then(|f| f.try_into().ok())
+        .and_then(|f| f.try_into())
 }

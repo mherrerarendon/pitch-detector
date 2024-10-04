@@ -53,8 +53,7 @@ pub mod hinted {
                     &signal,
                     file_sample_rate,
                     Some(MIN_FREQ..MAX_FREQ)
-                )
-                .ok_or(anyhow::anyhow!("error"))?
+                )?
                 .note_name,
             expected_note
         );
@@ -75,8 +74,7 @@ pub mod hinted {
                     &signal,
                     SAMPLE_RATE,
                     Some(MIN_FREQ..MAX_FREQ)
-                )
-                .ok_or(anyhow::anyhow!("Failed to detect note with hint"))?
+                )?
                 .note_name,
             expected_note
         );
@@ -92,9 +90,7 @@ pub fn test_fundamental_freq<D: PitchDetector>(
     pub const TEST_SAMPLE_RATE: f64 = 44000.0;
     let signal = test_signal(samples_file)?;
 
-    let freq = detector
-        .detect_pitch_in_range(&signal, TEST_SAMPLE_RATE, MIN_FREQ..MAX_FREQ)
-        .ok_or(anyhow::anyhow!("Did not get pitch"))?;
+    let freq = detector.detect_pitch_in_range(&signal, TEST_SAMPLE_RATE, MIN_FREQ..MAX_FREQ)?;
 
     assert!(
         freq.approx_eq(expected_freq, (0.02, 2)),
@@ -109,9 +105,7 @@ pub fn test_sine_wave<D: PitchDetector>(detector: &mut D, freq: f64) -> anyhow::
     const SAMPLE_RATE: f64 = 44100.0;
     let signal = sine_wave_signal(16384, 440., SAMPLE_RATE);
 
-    let actual_freq = detector
-        .detect_pitch_in_range(&signal, SAMPLE_RATE, MIN_FREQ..MAX_FREQ)
-        .ok_or(anyhow::anyhow!("Did not get pitch"))?;
+    let actual_freq = detector.detect_pitch_in_range(&signal, SAMPLE_RATE, MIN_FREQ..MAX_FREQ)?;
 
     assert!(
         actual_freq.approx_eq(freq, (0.2, 2)),

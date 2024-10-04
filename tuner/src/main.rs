@@ -5,8 +5,8 @@ use cpal::{Device, Sample, StreamConfig, SupportedBufferSize, SupportedStreamCon
 use dasp_sample::ToSample;
 use note_renderers::cmd_line::CmdLineNoteRenderer;
 use note_renderers::NoteRenderer;
+use pitch_detector::note::detect_note_in_range;
 use pitch_detector::pitch::PowerCepstrum;
-use pitch_detector::{note::detect_note_in_range, pitch::HannedFftDetector};
 use tokio::select;
 use tokio_util::sync::CancellationToken;
 
@@ -28,13 +28,10 @@ where
         .map(|s| s.to_sample::<f64>())
         .collect::<Vec<f64>>();
 
-    if let Some(note) =
-        detect_note_in_range(&signal, &mut detector, SAMPLE_RATE, MIN_FREQ..MAX_FREQ)
-    {
-        // TODO: handle unwrap
-        renderer.render_note(note).unwrap();
-    } else {
-        renderer.render_no_note().unwrap();
+    // TODO: handle unwraps
+    match detect_note_in_range(&signal, &mut detector, SAMPLE_RATE, MIN_FREQ..MAX_FREQ) {
+        Ok(note) => renderer.render_note(note).unwrap(),
+        Err(e) => renderer.render_no_note(e).unwrap(),
     }
 }
 

@@ -1,10 +1,13 @@
 use super::NoteRenderer;
 use crossterm::{
     cursor, execute, queue, style,
-    terminal::{self, size, ClearType, ScrollUp, SetSize},
+    terminal::{self, size, ClearType, SetSize},
 };
 use pitch_detector::{
-    core::constants::{MAX_CENTS_OFFSET, NUM_CENTS_BETWEEN_NOTES},
+    core::{
+        constants::{MAX_CENTS_OFFSET, NUM_CENTS_BETWEEN_NOTES},
+        error::PitchError,
+    },
     note::NoteDetectionResult,
 };
 use std::io::Write as _;
@@ -111,13 +114,13 @@ impl NoteRenderer for CmdLineNoteRenderer {
         Ok(())
     }
 
-    fn render_no_note(&mut self) -> anyhow::Result<()> {
+    fn render_no_note(&mut self, error: PitchError) -> anyhow::Result<()> {
         let mut stdout = std::io::stdout().lock();
         queue!(
             stdout,
             terminal::Clear(ClearType::CurrentLine),
             cursor::MoveToColumn(0),
-            style::Print("No note detected")
+            style::Print(error.to_string())
         )?;
         stdout.flush()?;
         Ok(())

@@ -18,9 +18,7 @@ pub fn plot_spectrum<D>(
 where
     D: PitchDetector + IntoFrequencyDomain,
 {
-    let max_freq = detector
-        .detect_pitch_in_range(signal, sample_rate, freq_range.clone())
-        .ok_or(anyhow::anyhow!("No pitch"))?;
+    let max_freq = detector.detect_pitch_in_range(signal, sample_rate, freq_range.clone())?;
     let max_bin = detector.freq_to_bin(max_freq, sample_rate);
     let plot_title = format!(
         "{} - {} - {:.2} max bin",
