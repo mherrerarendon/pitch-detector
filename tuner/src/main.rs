@@ -19,7 +19,7 @@ where
     const SAMPLE_RATE: f64 = 44100.0;
     const MAX_FREQ: f64 = 1046.50; // C6
     const MIN_FREQ: f64 = 32.7; // C1
-    let mut detector = PowerCepstrum::new_with_defaults().with_sigmas(1.);
+    let mut detector = PowerCepstrum::new_with_defaults().with_sigmas(0.5);
 
     // TODO: maybe have the detector work in terms of the Sample trait instead of a specific type
     // to avoid another allocation

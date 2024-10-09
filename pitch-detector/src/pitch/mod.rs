@@ -4,6 +4,7 @@
 //! is good for detecting sounds that are rich in harmonics, as well as low pitched sounds, but bad at detecting samples
 //! with fewer partials.
 //!
+mod autocorrelation;
 mod cepstrum;
 mod hanned_fft;
 
