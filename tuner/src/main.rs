@@ -6,7 +6,7 @@ use dasp_sample::ToSample;
 use note_renderers::cmd_line::CmdLineNoteRenderer;
 use note_renderers::NoteRenderer;
 use pitch_detector::note::detect_note_in_range;
-use pitch_detector::pitch::PowerCepstrum;
+use pitch_detector::pitch::{Cepstrum2, PowerCepstrum};
 use tokio::select;
 use tokio_util::sync::CancellationToken;
 
@@ -19,7 +19,9 @@ where
     const SAMPLE_RATE: f64 = 44100.0;
     const MAX_FREQ: f64 = 1046.50; // C6
     const MIN_FREQ: f64 = 32.7; // C1
-    let mut detector = PowerCepstrum::new_with_defaults().with_sigmas(0.5);
+
+    // let mut detector = PowerCepstrum::new_with_defaults().with_sigmas(0.5);
+    let mut detector = Cepstrum2;
 
     // TODO: maybe have the detector work in terms of the Sample trait instead of a specific type
     // to avoid another allocation
