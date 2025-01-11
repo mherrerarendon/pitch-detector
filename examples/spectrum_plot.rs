@@ -55,5 +55,24 @@ fn main() -> anyhow::Result<()> {
 
     plot_detector_for_freqs(HannedFftDetector::default(), vec![440.])?;
     plot_detector_for_freqs(HannedFftDetector::default(), vec![440., 523.])?;
+
+    let wav_file = format!("{}/test_data/wav/banjo.wav", env!("CARGO_MANIFEST_DIR"));
+    let mut reader = hound::WavReader::open(wav_file).unwrap();
+    let wav_spec = reader.spec();
+    println!("sample formats: {:?}", wav_spec.sample_format);
+    let sample_rate = reader.spec().sample_rate;
+    let samples = reader
+        .samples::<i32>()
+        .map(|s| s.unwrap() as f64)
+        .collect::<Vec<f64>>();
+
+    let mut detector = HannedFftDetector::default();
+    plot_spectrum(
+        &mut detector,
+        &samples,
+        20.0..1046.4,
+        sample_rate.into(),
+        "banjo",
+    )?;
     Ok(())
 }

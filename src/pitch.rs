@@ -18,6 +18,21 @@ use std::ops::Range;
 
 use crate::core::{utils::interpolated_peak_at, FftPoint};
 
+/// These options affect the way in which the pitch detection algorithm is executed
+struct DetectionOptions {
+    /// Transforms the detected pitch by applying interpolation rather than just returning a
+    /// discrete point. This increases the resolution of the algorithm, which should give a more
+    /// accurate result, but could also shift the detected pitch outside of the provided
+    /// pitch range
+    interpolate: bool,
+}
+
+impl Default for DetectionOptions {
+    fn default() -> Self {
+        Self { interpolate: true }
+    }
+}
+
 pub trait PitchDetector: SignalToSpectrum {
     /// The default implementation will detect within a conventional range of frequencies (20Hz to nyquist).
     /// If you want to detect a pitch in a specific range, use the [detect_pitch_in_range](Self::detect_pitch_in_range) method
@@ -48,7 +63,7 @@ pub trait PitchDetector: SignalToSpectrum {
             )?;
 
         let FftPoint { x: bin, .. } = interpolated_peak_at(&spectrum, max_bin.0)?;
-        Some(self.bin_to_freq(bin + start_bin as f64, sample_rate))
+        Some(self.bin_to_freq((max_bin.0 + start_bin) as f64, sample_rate))
     }
 }
 

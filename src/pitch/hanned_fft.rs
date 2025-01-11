@@ -104,8 +104,14 @@ mod hinted {
 
 #[cfg(test)]
 mod tests {
+    use float_cmp::ApproxEq;
+    use hound::WavReader;
+
     use super::*;
-    use crate::core::test_utils::{test_fundamental_freq, test_signal, test_sine_wave};
+    use crate::core::{
+        constants::{MAX_FREQ, MIN_FREQ},
+        test_utils::{test_fundamental_freq, test_signal, test_sine_wave},
+    };
 
     #[test]
     fn test_from_sample_files() -> anyhow::Result<()> {
@@ -137,5 +143,30 @@ mod tests {
         let mut detector = HannedFftDetector::default();
         test_sine_wave(&mut detector, 440.)?;
         Ok(())
+    }
+
+    #[test]
+    fn it_detects_banjo_pitch() {
+        let wav_file = format!("{}/test_data/wav/banjo.wav", env!("CARGO_MANIFEST_DIR"));
+        let mut reader = WavReader::open(wav_file).unwrap();
+        let wav_spec = reader.spec();
+        println!("sample formats: {:?}", wav_spec.sample_format);
+        let sample_rate = reader.spec().sample_rate;
+        let samples = reader
+            .samples::<i32>()
+            .map(|s| s.unwrap() as f64)
+            .collect::<Vec<f64>>();
+
+        let mut detector = HannedFftDetector::default();
+
+        let freq = detector
+            .detect_pitch_in_range(&samples, sample_rate.into(), 20.0..1046.4)
+            .unwrap();
+        assert!(
+            freq.approx_eq(1066.132, (0.02, 2)),
+            "Expected freq: {}, Actual freq: {}",
+            1066.132,
+            freq
+        );
     }
 }
