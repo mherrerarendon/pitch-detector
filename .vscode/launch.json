@@ -13,8 +13,7 @@
                     "test",
                     "--no-run",
                     "--lib",
-                    "--package=pitch-detector",
-                    "--features=hinted"
+                    "--package=pitch-detector"
                 ],
                 "filter": {
                     "name": "pitch_detector",
@@ -27,51 +26,12 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "spectrum_plot",
-            "cargo": {
-                "args": [
-                    "build",
-                    "--example=spectrum_plot",
-                    "--package=pitch-detector",
-                    "--features=test_utils,plot"
-                ],
-                "filter": {
-                    "name": "spectrum_plot",
-                    "kind": "example"
-                }
-            },
-            "args": [],
-            "cwd": "${workspaceFolder}"
-        },
-        {
-            "type": "lldb",
-            "request": "launch",
-            "name": "Debug unit tests in example 'spectrum_plot'",
-            "cargo": {
-                "args": [
-                    "test",
-                    "--no-run",
-                    "--example=spectrum_plot",
-                    "--package=pitch-detector"
-                ],
-                "filter": {
-                    "name": "spectrum_plot",
-                    "kind": "example"
-                }
-            },
-            "args": [],
-            "cwd": "${workspaceFolder}"
-        },
-        {
-            "type": "lldb",
-            "request": "launch",
-            "name": "basic_usage",
+            "name": "Debug example 'basic_usage'",
             "cargo": {
                 "args": [
                     "build",
                     "--example=basic_usage",
-                    "--package=pitch-detector",
-                    "--features=hinted"
+                    "--package=pitch-detector"
                 ],
                 "filter": {
                     "name": "basic_usage",
@@ -95,6 +55,99 @@
                 "filter": {
                     "name": "basic_usage",
                     "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug benchmark 'bench_pitch_detectors'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bench=bench_pitch_detectors",
+                    "--package=pitch-detector"
+                ],
+                "filter": {
+                    "name": "bench_pitch_detectors",
+                    "kind": "bench"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'spectrum-plot'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=spectrum-plot",
+                    "--package=spectrum-plot"
+                ],
+                "filter": {
+                    "name": "spectrum-plot",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in executable 'spectrum-plot'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=spectrum-plot",
+                    "--package=spectrum-plot"
+                ],
+                "filter": {
+                    "name": "spectrum-plot",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'tuner'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=tuner",
+                    "--package=tuner"
+                ],
+                "filter": {
+                    "name": "tuner",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in executable 'tuner'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=tuner",
+                    "--package=tuner"
+                ],
+                "filter": {
+                    "name": "tuner",
+                    "kind": "bin"
                 }
             },
             "args": [],

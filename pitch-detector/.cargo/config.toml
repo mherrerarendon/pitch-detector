@@ -1,0 +1,2 @@
+[alias]
+benchmark = ["criterion", "--features", "test_utils"]
