@@ -27,7 +27,6 @@ pub fn test_signal(filename: &str) -> anyhow::Result<Vec<f64>> {
     Ok(audio_buffer_to_signal(&buffer).collect())
 }
 
-#[cfg(feature = "hinted")]
 pub mod hinted {
     use crate::{
         core::{
@@ -38,27 +37,6 @@ pub mod hinted {
         },
         note::hinted::HintedNoteDetector,
     };
-
-    pub fn assert_hinted_detector<D: HintedNoteDetector>(
-        detector: &mut D,
-        samples_file: &str,
-        file_sample_rate: f64,
-        expected_note: NoteName,
-    ) -> anyhow::Result<()> {
-        let signal = test_signal(samples_file)?;
-        assert_eq!(
-            detector
-                .detect_note_with_hint_and_range(
-                    expected_note.clone(),
-                    &signal,
-                    file_sample_rate,
-                    Some(MIN_FREQ..MAX_FREQ)
-                )?
-                .note_name,
-            expected_note
-        );
-        Ok(())
-    }
 
     pub fn assert_hinted_detector_sine_waves<D: HintedNoteDetector>(
         detector: &mut D,

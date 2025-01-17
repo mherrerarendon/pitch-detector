@@ -1,3 +1,7 @@
+//! For scenarios where an audio sample might contain multiple frequencies, especially when those other frequencies
+//! might be very prominent, `HintedNoteDetector` supports identifying the accuracy of a specified note.
+//! See the top level documentation for more information and examples
+
 use std::ops::Range;
 
 use crate::{
@@ -29,7 +33,6 @@ pub trait HintedNoteDetector {
     ) -> Result<NoteDetectionResult, PitchError>;
 }
 
-#[cfg(feature = "hinted")]
 impl<T> HintedNoteDetector for T
 where
     T: IntoFrequencyDomain,
@@ -70,11 +73,35 @@ where
 #[cfg(test)]
 mod tests {
     use crate::{
-        core::test_utils::hinted::{assert_hinted_detector, assert_hinted_detector_sine_waves},
+        core::{
+            constants::{MAX_FREQ, MIN_FREQ},
+            test_utils::{hinted::assert_hinted_detector_sine_waves, test_signal},
+        },
         pitch::HannedFftDetector,
     };
 
     use super::*;
+
+    pub fn assert_hinted_detector<D: HintedNoteDetector>(
+        detector: &mut D,
+        samples_file: &str,
+        file_sample_rate: f64,
+        expected_note: NoteName,
+    ) -> anyhow::Result<()> {
+        let signal = test_signal(samples_file)?;
+        assert_eq!(
+            detector
+                .detect_note_with_hint_and_range(
+                    expected_note,
+                    &signal,
+                    file_sample_rate,
+                    Some(MIN_FREQ..MAX_FREQ)
+                )?
+                .note_name,
+            expected_note
+        );
+        Ok(())
+    }
 
     #[test]
     fn test_hinted_detector() -> anyhow::Result<()> {

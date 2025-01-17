@@ -9,7 +9,7 @@ pub mod utils;
 #[cfg(any(test, feature = "test_utils"))]
 pub mod test_utils;
 
-#[derive(Debug, Clone, PartialEq, PartialOrd)]
+#[derive(Debug, Copy, Clone, PartialEq, PartialOrd)]
 pub enum NoteName {
     A,
     ASharp,

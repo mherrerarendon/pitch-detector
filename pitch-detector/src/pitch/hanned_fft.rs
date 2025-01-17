@@ -27,7 +27,7 @@ impl HannedFftDetector {
             let normalize = 1. / (fft_space.padded_len() as f64).sqrt();
             Box::new(
                 fft_space
-                    .freq_domain(true)
+                    .freq_domain_iter(true)
                     .skip(lower_limit)
                     .take(upper_limit - lower_limit)
                     .map(move |(amplitude, _)| amplitude * normalize),

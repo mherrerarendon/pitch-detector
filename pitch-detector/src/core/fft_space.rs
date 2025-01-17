@@ -98,7 +98,7 @@ impl FftSpace {
             .for_each(|o| *o = Complex::zero())
     }
 
-    pub fn freq_domain(&self, square_rooted: bool) -> utils::FreqDomainIter {
+    pub fn freq_domain_iter(&self, square_rooted: bool) -> utils::FreqDomainIter {
         utils::FreqDomainIter {
             complex_iter: self.space.iter(),
             square_rooted,

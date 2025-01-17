@@ -58,7 +58,11 @@ pub fn interpolated_peak_at(spectrum: &[f64], fft_point_x: usize) -> Result<FftP
         .map(|i| i as f64)
         .collect();
 
-    assert_eq!(y_vals.len(), x_vals.len(), "Sanity check failed");
+    assert_eq!(
+        y_vals.len(),
+        x_vals.len(),
+        "Expected y_vals and x_vals to equal in length"
+    );
     match x_vals.len() {
         0 => Err(PitchError::IncorrectParameters(
             "Expected at least one x value".to_string(),

@@ -1,7 +1,6 @@
 mod note_detection_result;
 pub mod peak_detector;
 
-#[cfg(feature = "hinted")]
 pub mod hinted;
 
 use std::ops::Range;

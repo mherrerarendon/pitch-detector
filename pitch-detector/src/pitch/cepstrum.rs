@@ -63,16 +63,15 @@ impl Default for PowerCepstrum {
 }
 
 impl PowerCepstrum {
-    fn unscaled_spectrum(&self, bin_range: (usize, usize)) -> Box<dyn Iterator<Item = f64> + '_> {
+    fn unscaled_spectrum(&self, bin_range: (usize, usize)) -> impl Iterator<Item = f64> + use<'_> {
         if let Some(ref fft_space) = self.fft_space {
             let (lower_limit, upper_limit) = bin_range;
-            Box::new(
-                fft_space
-                    .freq_domain(false)
-                    .skip(lower_limit)
-                    .take(upper_limit - lower_limit)
-                    .map(|(amplitude, _)| amplitude),
-            )
+
+            fft_space
+                .freq_domain_iter(false)
+                .skip(lower_limit)
+                .take(upper_limit - lower_limit)
+                .map(|(amplitude, _)| amplitude)
         } else {
             panic!("FFT space not initialized");
         }

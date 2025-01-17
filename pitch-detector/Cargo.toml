@@ -23,7 +23,6 @@ path = "src/lib.rs"
 
 [features]
 test_utils = ["serde", "serde_json", "float-cmp"]
-hinted =[]
 plot = ["plotters"]
 
 # [[example]]
@@ -32,7 +31,6 @@ plot = ["plotters"]
 
 [[example]]
 name = "basic_usage"
-required-features = ["hinted"]
 
 [dependencies]
 anyhow = "1.0.52"
