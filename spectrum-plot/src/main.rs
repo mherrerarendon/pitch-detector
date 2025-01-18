@@ -1,10 +1,12 @@
+mod plot;
+
+use crate::plot::plot_spectrum;
 use pitch_detector::{
     core::{
         into_frequency_domain::IntoFrequencyDomain, test_utils::test_signal,
         utils::mixed_wave_signal,
     },
     pitch::{HannedFftDetector, PitchDetector, PowerCepstrum},
-    plot::plot_spectrum,
 };
 
 const TEST_FILE_SAMPLE_RATE: f64 = 44000.;

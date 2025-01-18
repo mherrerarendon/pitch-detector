@@ -120,10 +120,7 @@ impl PitchDetector for HannedFftDetector {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{
-        core::test_utils::{test_fundamental_freq, test_signal, test_sine_wave},
-        pitch::PitchDetector,
-    };
+    use crate::core::test_utils::{test_fundamental_freq, test_sine_wave};
 
     #[test]
     fn test_from_sample_files() -> anyhow::Result<()> {
@@ -136,17 +133,6 @@ mod tests {
 
         // Fails to detect open C, which should be around 64 Hz
         test_fundamental_freq(&mut detector, "cello_open_c.json", 129.046)?;
-        Ok(())
-    }
-
-    // #[test]
-    fn test_noise() -> anyhow::Result<()> {
-        pub const TEST_SAMPLE_RATE: f64 = 44000.0;
-        let signal = test_signal("noise.json")?;
-
-        let mut detector = HannedFftDetector::default();
-        assert!(detector.detect_pitch(&signal, TEST_SAMPLE_RATE).is_err());
-
         Ok(())
     }
 

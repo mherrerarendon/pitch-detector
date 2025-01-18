@@ -90,5 +90,3 @@ pub mod core;
 pub mod note;
 pub mod pitch;
 
-#[cfg(feature = "plot")]
-pub mod plot;

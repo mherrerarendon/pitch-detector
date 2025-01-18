@@ -5,7 +5,7 @@ use plotters::{
     style::{IntoFont, RED, WHITE},
 };
 
-use crate::{core::into_frequency_domain::IntoFrequencyDomain, pitch::PitchDetector};
+use pitch_detector::{core::into_frequency_domain::IntoFrequencyDomain, pitch::PitchDetector};
 
 pub fn plot_spectrum<D>(
     detector: &mut D,

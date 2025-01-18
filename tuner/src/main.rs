@@ -6,7 +6,7 @@ use dasp_sample::ToSample;
 use note_renderers::cmd_line::CmdLineNoteRenderer;
 use note_renderers::NoteRenderer;
 use pitch_detector::note::detect_note_in_range;
-use pitch_detector::pitch::{Cepstrum2, PowerCepstrum};
+use pitch_detector::pitch::Cepstrum2;
 use tokio::select;
 use tokio_util::sync::CancellationToken;
 

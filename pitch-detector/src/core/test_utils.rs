@@ -31,7 +31,6 @@ pub mod hinted {
     use crate::{
         core::{
             constants::{MAX_FREQ, MIN_FREQ},
-            test_utils::test_signal,
             utils::mixed_wave_signal,
             NoteName,
         },
