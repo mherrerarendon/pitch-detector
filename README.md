@@ -1,8 +1,7 @@
 # pitch-detector
 
-[![Build status](https://img.shields.io/github/workflow/status/mherrerarendon/freq-detector/Rust)](https://github.com/mherrerarendon/freq-detector)
+![Build status](https://github.com/mherrerarendon/pitch-detector/actions/workflows/pr.yml/badge.svg)
 [![docs.rs](https://img.shields.io/docsrs/pitch-detector)](https://docs.rs/pitch-detector/latest/pitch_detector/)
-[![codecov](https://img.shields.io/codecov/c/github/mherrerarendon/freq-detector)](https://codecov.io/gh/mherrerarendon/freq-detector)
 [![Crates.io](https://img.shields.io/crates/v/pitch-detector)](https://crates.io/crates/pitch-detector)
 [![GitHub](https://img.shields.io/github/license/mherrerarendon/pitch-detector)](https://github.com/mherrerarendon/pitch-detector/blob/main/LICENSE-MIT)
 <br/>
@@ -10,7 +9,7 @@
 A pitch and note detector library written in Rust.
 
 ## Usage
-Probably the most common use case is to detect the predominant frequency of a signal. 
+Probably the most common use case is to detect the predominant frequency of a signal.
 ```rust
 use pitch_detector::{
     pitch::{hanned_fft::HannedFftDetector, PitchDetector},
@@ -57,7 +56,7 @@ assert_eq!(note.note_name, NoteName::A);
 Check out the [examples](https://github.com/mherrerarendon/pitch-detector/tree/main/examples) directory for more.
 
 ## Testing
-Run `cargo pitch` to run tests for all features, and `cargo benchmark` alias to run benchmarks with features setup correctly. 
+Run `cargo pitch` to run tests for all features, and `cargo benchmark` alias to run benchmarks with features setup correctly.
 
 ## License
 Licensed under the [MIT license](https://github.com/mherrerarendon/pitch-detector/blob/main/LICENSE-MIT)
