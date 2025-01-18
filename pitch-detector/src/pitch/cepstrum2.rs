@@ -1,4 +1,3 @@
-extern crate rustfft;
 use rustfft::num_complex::Complex;
 use rustfft::FftPlanner;
 
@@ -120,10 +119,10 @@ mod tests {
     fn test_power() -> anyhow::Result<()> {
         let mut detector = Cepstrum2;
 
-        test_fundamental_freq(&mut detector, "cello_open_a.json", 218.905)?;
-        test_fundamental_freq(&mut detector, "cello_open_d.json", 146.666)?;
-        test_fundamental_freq(&mut detector, "cello_open_g.json", 97.130)?;
-        test_fundamental_freq(&mut detector, "cello_open_c.json", 64.421)?;
+        test_fundamental_freq(&mut detector, "cello_open_a.wav", 218.905)?;
+        test_fundamental_freq(&mut detector, "cello_open_d.wav", 146.666)?;
+        test_fundamental_freq(&mut detector, "cello_open_g.wav", 97.130)?;
+        test_fundamental_freq(&mut detector, "cello_open_c.wav", 64.421)?;
         Ok(())
     }
 

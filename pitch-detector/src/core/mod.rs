@@ -6,7 +6,7 @@ pub mod fft_space;
 pub mod into_frequency_domain;
 pub mod utils;
 
-#[cfg(any(test, feature = "test_utils"))]
+#[cfg(test)]
 pub mod test_utils;
 
 #[derive(Debug, Copy, Clone, PartialEq, PartialOrd)]

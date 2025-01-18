@@ -170,10 +170,10 @@ mod tests {
     fn test_power() -> anyhow::Result<()> {
         let mut detector = PowerCepstrum::default();
 
-        test_fundamental_freq(&mut detector, "cello_open_a.json", 219.418)?;
-        test_fundamental_freq(&mut detector, "cello_open_d.json", 146.730)?;
-        test_fundamental_freq(&mut detector, "cello_open_g.json", 97.214)?;
-        test_fundamental_freq(&mut detector, "cello_open_c.json", 64.476)?;
+        test_fundamental_freq(&mut detector, "cello_open_a.wav", 219.418)?;
+        test_fundamental_freq(&mut detector, "cello_open_d.wav", 146.730)?;
+        test_fundamental_freq(&mut detector, "cello_open_g.wav", 97.214)?;
+        test_fundamental_freq(&mut detector, "cello_open_c.wav", 64.476)?;
         Ok(())
     }
 

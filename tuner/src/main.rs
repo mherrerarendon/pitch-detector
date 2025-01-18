@@ -47,7 +47,7 @@ where
 {
     // A flag to indicate that recording is in progress.
     println!("Begin recording...");
-    renderer.input_start()?;
+    renderer.initialize()?;
 
     // Run the input stream on a separate thread.
 

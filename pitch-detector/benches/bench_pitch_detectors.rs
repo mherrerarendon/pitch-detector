@@ -1,8 +1,15 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use pitch_detector::{
-    core::test_utils::test_signal,
-    pitch::{HannedFftDetector, PitchDetector, PowerCepstrum},
-};
+use pitch_detector::pitch::{HannedFftDetector, PitchDetector, PowerCepstrum};
+
+pub fn test_signal(filename: &str) -> anyhow::Result<Vec<f64>> {
+    let file_path = format!(
+        "{}/test_data/audio_recordings/{}",
+        env!("CARGO_MANIFEST_DIR"),
+        filename
+    );
+    let mut reader = hound::WavReader::open(file_path).unwrap();
+    Ok(reader.samples::<i16>().map(|s| s.unwrap() as f64).collect())
+}
 
 fn criterion_benchmark(c: &mut Criterion) {
     let signal = test_signal("cello_open_a.json").expect("Test file should exist");

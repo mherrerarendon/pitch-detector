@@ -124,10 +124,10 @@ mod tests {
     fn it_detects_cello_pitches() -> anyhow::Result<()> {
         let mut detector = Autocorrelation2::new(0.1);
 
-        test_fundamental_freq(&mut detector, "cello_open_a.json", 220.)?;
-        test_fundamental_freq(&mut detector, "cello_open_d.json", 146.666)?;
-        test_fundamental_freq(&mut detector, "cello_open_g.json", 97.345)?;
-        test_fundamental_freq(&mut detector, "cello_open_c.json", 64.516)?;
+        test_fundamental_freq(&mut detector, "cello_open_a.wav", 220.)?;
+        test_fundamental_freq(&mut detector, "cello_open_d.wav", 146.666)?;
+        test_fundamental_freq(&mut detector, "cello_open_g.wav", 97.345)?;
+        test_fundamental_freq(&mut detector, "cello_open_c.wav", 64.516)?;
         Ok(())
     }
 

@@ -126,13 +126,13 @@ mod tests {
     fn test_from_sample_files() -> anyhow::Result<()> {
         let mut detector = HannedFftDetector::default();
 
-        test_fundamental_freq(&mut detector, "tuner_c5.json", 523.242)?;
-        test_fundamental_freq(&mut detector, "cello_open_a.json", 219.383)?;
-        test_fundamental_freq(&mut detector, "cello_open_d.json", 146.732)?;
-        test_fundamental_freq(&mut detector, "cello_open_g.json", 97.209)?;
+        test_fundamental_freq(&mut detector, "tuner_c5.wav", 523.242)?;
+        test_fundamental_freq(&mut detector, "cello_open_a.wav", 219.383)?;
+        test_fundamental_freq(&mut detector, "cello_open_d.wav", 146.732)?;
+        test_fundamental_freq(&mut detector, "cello_open_g.wav", 97.209)?;
 
         // Fails to detect open C, which should be around 64 Hz
-        test_fundamental_freq(&mut detector, "cello_open_c.json", 129.046)?;
+        test_fundamental_freq(&mut detector, "cello_open_c.wav", 129.046)?;
         Ok(())
     }
 

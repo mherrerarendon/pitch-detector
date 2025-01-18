@@ -8,7 +8,7 @@ use pitch_detector::{
         constants::{MAX_CENTS_OFFSET, NUM_CENTS_BETWEEN_NOTES},
         error::PitchError,
     },
-    note::NoteDetectionResult,
+    note::NoteDetection,
 };
 use std::io::Write as _;
 
@@ -27,7 +27,7 @@ struct TunerLayout {
 }
 
 impl TunerLayout {
-    fn new(note: &NoteDetectionResult, terminal_width: u16) -> Self {
+    fn new(note: &NoteDetection, terminal_width: u16) -> Self {
         let note_name_pos = terminal_width / 2;
         let ticks_mark_percent =
             (NUM_CENTS_BETWEEN_NOTES - MAX_CENTS_OFFSET) / NUM_CENTS_BETWEEN_NOTES;
@@ -96,7 +96,7 @@ impl CmdLineNoteRenderer {
 }
 
 impl NoteRenderer for CmdLineNoteRenderer {
-    fn render_note(&mut self, note: NoteDetectionResult) -> anyhow::Result<()> {
+    fn render_note(&mut self, note: NoteDetection) -> anyhow::Result<()> {
         let tuner_layout = TunerLayout::new(&note, self.cols);
         let tuner_string = tuner_layout.build(
             &note.previous_note_name.to_string(),
@@ -120,13 +120,13 @@ impl NoteRenderer for CmdLineNoteRenderer {
             stdout,
             terminal::Clear(ClearType::CurrentLine),
             cursor::MoveToColumn(0),
-            // style::Print(error.to_string())
+            style::Print(error.to_string())
         )?;
         stdout.flush()?;
         Ok(())
     }
 
-    fn input_start(&mut self) -> anyhow::Result<()> {
+    fn initialize(&mut self) -> anyhow::Result<()> {
         let (cols, rows) = size()?;
         self.original_cols = Some(cols);
         self.original_rows = Some(rows);
@@ -139,7 +139,7 @@ impl NoteRenderer for CmdLineNoteRenderer {
         Ok(())
     }
 
-    fn input_end(&mut self) -> anyhow::Result<()> {
+    fn tear_down(&mut self) -> anyhow::Result<()> {
         let original_cols = self
             .original_cols
             .expect("input_start should be called before input_end");

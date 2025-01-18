@@ -1,8 +1,5 @@
 use float_cmp::ApproxEq;
 
-use serde::Deserialize;
-use std::fs;
-
 use crate::{
     core::{
         constants::{MAX_FREQ, MIN_FREQ},
@@ -11,20 +8,14 @@ use crate::{
     pitch::PitchDetector,
 };
 
-use super::utils::audio_buffer_to_signal;
-
-// All test files have a buffer size of 17,600 samples, and a sample rate of 44,000 Hz.
-
-#[derive(Deserialize)]
-pub struct SampleData {
-    pub data: Option<Vec<u8>>,
-}
-
 pub fn test_signal(filename: &str) -> anyhow::Result<Vec<f64>> {
-    let file_path = format!("{}/test_data/{}", env!("CARGO_MANIFEST_DIR"), filename);
-    let mut sample_data: SampleData = serde_json::from_str(&fs::read_to_string(&file_path)?)?;
-    let buffer = sample_data.data.take().unwrap();
-    Ok(audio_buffer_to_signal(&buffer).collect())
+    let file_path = format!(
+        "{}/test_data/audio_recordings/{}",
+        env!("CARGO_MANIFEST_DIR"),
+        filename
+    );
+    let mut reader = hound::WavReader::open(file_path).unwrap();
+    Ok(reader.samples::<i16>().map(|s| s.unwrap() as f64).collect())
 }
 
 pub mod hinted {

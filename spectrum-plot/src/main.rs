@@ -2,16 +2,23 @@ mod plot;
 
 use crate::plot::plot_spectrum;
 use pitch_detector::{
-    core::{
-        into_frequency_domain::IntoFrequencyDomain, test_utils::test_signal,
-        utils::mixed_wave_signal,
-    },
+    core::{into_frequency_domain::IntoFrequencyDomain, utils::mixed_wave_signal},
     pitch::{HannedFftDetector, PitchDetector, PowerCepstrum},
 };
 
-const TEST_FILE_SAMPLE_RATE: f64 = 44000.;
+const TEST_FILE_SAMPLE_RATE: f64 = 44100.;
 pub const MAX_FREQ: f64 = 1046.50; // C6
 pub const MIN_FREQ: f64 = 32.7; // C1
+
+pub fn test_signal(filename: &str) -> anyhow::Result<Vec<f64>> {
+    let file_path = format!(
+        "{}/test_data/audio_recordings/{}",
+        env!("CARGO_MANIFEST_DIR"),
+        filename
+    );
+    let mut reader = hound::WavReader::open(file_path).unwrap();
+    Ok(reader.samples::<i16>().map(|s| s.unwrap() as f64).collect())
+}
 
 fn plot_detector_for_files<D: PitchDetector + IntoFrequencyDomain>(
     mut detector: D,

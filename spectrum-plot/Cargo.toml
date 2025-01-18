@@ -6,6 +6,7 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0.89"
 plotters = {version = "0.3.1"}
-# TODO: why do we need to depend on a test feature?
-pitch-detector = { path = "../pitch-detector", features = ["test_utils"]}
+pitch-detector = { path = "../pitch-detector"}
+hound = "3.5.1"
+
 

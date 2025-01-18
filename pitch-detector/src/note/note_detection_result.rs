@@ -8,7 +8,7 @@ use crate::core::{
 /// You will rarely need to instantiate this struct directly. Most commonly this will be returned from
 /// [`detect_note`](crate::note::detect_note).
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
-pub struct NoteDetectionResult {
+pub struct NoteDetection {
     /// The predominant frequency detected from a signal.
     pub actual_freq: f64,
 
@@ -36,7 +36,7 @@ pub struct NoteDetectionResult {
     pub in_tune: bool,
 }
 
-impl TryFrom<f64> for NoteDetectionResult {
+impl TryFrom<f64> for NoteDetection {
     type Error = PitchError;
     fn try_from(freq: f64) -> Result<Self, Self::Error> {
         if freq < MIN_FREQ {
@@ -83,7 +83,7 @@ mod tests {
         next_note_name: NoteName,
         in_tune: bool,
     ) -> Result<()> {
-        let pitch = NoteDetectionResult::try_from(actual_freq)?;
+        let pitch = NoteDetection::try_from(actual_freq)?;
         assert_eq!(
             pitch.note_name, note_name,
             "Expected note name {}, got {}",
