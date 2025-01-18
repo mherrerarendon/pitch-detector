@@ -55,8 +55,5 @@ assert_eq!(note.note_name, NoteName::A);
 ```
 Check out the [examples](https://github.com/mherrerarendon/pitch-detector/tree/main/examples) directory for more.
 
-## Testing
-Run `cargo pitch` to run tests for all features, and `cargo benchmark` alias to run benchmarks with features setup correctly.
-
 ## License
 Licensed under the [MIT license](https://github.com/mherrerarendon/pitch-detector/blob/main/LICENSE-MIT)
