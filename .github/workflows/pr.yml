@@ -17,3 +17,5 @@ jobs:
     - name: Run the pitch-detector crate tests
       working-directory: ./pitch-detector
       run: cargo test
+    - name: Run Clippy
+      run: cargo clippy

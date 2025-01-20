@@ -16,7 +16,7 @@ pub use hanned_fft::HannedFftDetector;
 
 use std::ops::Range;
 
-use crate::core::{error::PitchError, into_frequency_domain::IntoFrequencyDomain};
+use crate::core::{error::PitchError, into_frequency_domain::ToFrequencyDomain};
 
 pub trait PitchDetector {
     /// The default implementation will detect within a conventional range of frequencies (20Hz to nyquist).

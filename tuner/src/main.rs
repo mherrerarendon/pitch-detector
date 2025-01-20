@@ -1,5 +1,7 @@
 mod note_renderers;
 
+use std::sync::Arc;
+
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use cpal::{Device, Sample, StreamConfig};
 use dasp_sample::ToSample;
@@ -11,7 +13,7 @@ use tokio::select;
 use tokio_util::sync::CancellationToken;
 
 #[tracing::instrument(skip_all)]
-fn write_input_data<T, Renderer>(input: &[T], renderer: &mut Renderer)
+fn write_input_data<T, Renderer>(input: &[T], renderer: Arc<Renderer>)
 where
     T: Sample + ToSample<f64>,
     Renderer: NoteRenderer,
@@ -40,10 +42,10 @@ where
 async fn listen_audio<Renderer>(
     config: StreamConfig,
     device: Device,
-    mut renderer: Renderer,
+    renderer: Arc<Renderer>,
 ) -> anyhow::Result<()>
 where
-    Renderer: NoteRenderer + Send + 'static,
+    Renderer: NoteRenderer + Send + Sync + 'static,
 {
     // A flag to indicate that recording is in progress.
     println!("Begin recording...");
@@ -55,9 +57,10 @@ where
         eprintln!("an error occurred on stream: {}", err);
     };
 
+    let renderer_clone = renderer.clone();
     let stream = device.build_input_stream(
-        &config.into(),
-        move |data, _: &_| write_input_data::<f32, _>(data, &mut renderer),
+        &config,
+        move |data, _: &_| write_input_data::<f32, _>(data, renderer_clone.clone()),
         err_fn,
         None,
     )?;
@@ -69,6 +72,7 @@ where
 
     select! {
         _ = cloned_token.cancelled() => {
+            let _ = renderer.tear_down();
         }
         _ = tokio::time::sleep(std::time::Duration::from_secs(9999)) => {
         }
@@ -105,7 +109,7 @@ async fn main() -> anyhow::Result<()> {
 
     println!("Input config: {:?}", config);
 
-    let cmd_line_renderer = CmdLineNoteRenderer::new_with_rows_and_columns(50, 10);
+    let cmd_line_renderer = Arc::new(CmdLineNoteRenderer::new_with_rows_and_columns(50, 10));
     listen_audio(config, device, cmd_line_renderer).await?;
 
     Ok(())

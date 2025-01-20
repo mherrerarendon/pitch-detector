@@ -4,14 +4,18 @@ use pitch_detector::{core::error::PitchError, note::NoteDetection};
 
 pub trait NoteRenderer {
     /// Renders the note detected from the pitch detector
-    fn render_note(&mut self, note: NoteDetection) -> anyhow::Result<()>;
+    fn render_note(&self, note: NoteDetection) -> anyhow::Result<()>;
 
     /// Renders "no note detected"
-    fn render_no_note(&mut self, error: PitchError) -> anyhow::Result<()>;
+    fn render_no_note(&self, error: PitchError) -> anyhow::Result<()>;
 
     /// Initializes the renderer
-    fn initialize(&mut self) -> anyhow::Result<()>;
+    fn initialize(&self) -> anyhow::Result<()> {
+        Ok(())
+    }
 
     /// Tears down the renderer
-    fn tear_down(&mut self) -> anyhow::Result<()>;
+    fn tear_down(&self) -> anyhow::Result<()> {
+        Ok(())
+    }
 }

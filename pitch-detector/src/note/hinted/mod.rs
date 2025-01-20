@@ -6,7 +6,7 @@ use std::ops::Range;
 
 use crate::{
     core::{
-        error::PitchError, into_frequency_domain::IntoFrequencyDomain, utils::interpolated_peak_at,
+        error::PitchError, into_frequency_domain::ToFrequencyDomain, utils::interpolated_peak_at,
         NoteName,
     },
     note::peak_detector::{PeakDetector, PeakFinderDetector},
@@ -35,7 +35,7 @@ pub trait HintedNoteDetector {
 
 impl<T> HintedNoteDetector for T
 where
-    T: IntoFrequencyDomain,
+    T: ToFrequencyDomain,
 {
     fn detect_note_with_hint_and_range(
         &mut self,
@@ -45,11 +45,11 @@ where
         freq_range_hint: Option<Range<f64>>,
     ) -> Result<NoteDetection, PitchError> {
         let (start_bin, spectrum) =
-            self.into_frequency_domain(signal, freq_range_hint.map(|r| (r, sample_rate)));
+            self.to_frequency_domain(signal, freq_range_hint.map(|r| (r, sample_rate)));
         const THRESHOLD: f64 = 6.;
         let peak_detector = PeakFinderDetector::new(THRESHOLD);
         let mut candidates = peak_detector.detect_peaks(&spectrum);
-        candidates.sort_by(|a, b| b.partial_cmp(&a).unwrap());
+        candidates.sort_by(|a, b| b.partial_cmp(a).unwrap());
         let bin = candidates
             .iter()
             .find(|bin| {

@@ -1,11 +1,10 @@
-# pitch-detector
-
 ![Build status](https://github.com/mherrerarendon/pitch-detector/actions/workflows/pr.yml/badge.svg)
 [![docs.rs](https://img.shields.io/docsrs/pitch-detector)](https://docs.rs/pitch-detector/latest/pitch_detector/)
 [![Crates.io](https://img.shields.io/crates/v/pitch-detector)](https://crates.io/crates/pitch-detector)
 [![GitHub](https://img.shields.io/github/license/mherrerarendon/pitch-detector)](https://github.com/mherrerarendon/pitch-detector/blob/main/LICENSE-MIT)
 <br/>
 
+# Pitch Detector
 A pitch and note detector library written in Rust.
 
 ## Usage

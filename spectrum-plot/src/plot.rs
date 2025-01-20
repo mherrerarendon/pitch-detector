@@ -5,7 +5,7 @@ use plotters::{
     style::{IntoFont, RED, WHITE},
 };
 
-use pitch_detector::{core::into_frequency_domain::IntoFrequencyDomain, pitch::PitchDetector};
+use pitch_detector::{core::into_frequency_domain::ToFrequencyDomain, pitch::PitchDetector};
 
 pub fn plot_spectrum<D>(
     detector: &mut D,
@@ -16,7 +16,7 @@ pub fn plot_spectrum<D>(
     plot_name: &str,
 ) -> anyhow::Result<()>
 where
-    D: PitchDetector + IntoFrequencyDomain,
+    D: PitchDetector + ToFrequencyDomain,
 {
     let max_freq = detector.detect_pitch_in_range(signal, sample_rate, freq_range.clone())?;
     let max_bin = detector.freq_to_bin(max_freq, sample_rate);
@@ -25,13 +25,13 @@ where
         algorithm_name, plot_name, max_bin
     );
     let output_file = format!(
-        "{}/test_data/results/{}.png",
+        "{}/test_data/results/{} - {}.png",
         env!("CARGO_MANIFEST_DIR"),
-        format!("{} - {}", algorithm_name, plot_name)
+        algorithm_name,
+        plot_name
     );
 
-    let (start_bin, y_vals) =
-        detector.into_frequency_domain(signal, Some((freq_range, sample_rate)));
+    let (start_bin, y_vals) = detector.to_frequency_domain(signal, Some((freq_range, sample_rate)));
     let x_vals: Vec<f64> = (start_bin..y_vals.len() + start_bin)
         .map(|x| x as f64)
         .collect();
@@ -49,7 +49,7 @@ where
         .caption(plot_title, ("sans-serif", 40).into_font())
         .x_label_area_size(20)
         .y_label_area_size(90)
-        .build_cartesian_2d(x_vals[0]..x_vals[x_vals.len() - 1] as f64, y_min..y_max)?;
+        .build_cartesian_2d(x_vals[0]..x_vals[x_vals.len() - 1], y_min..y_max)?;
 
     chart
         .configure_mesh()

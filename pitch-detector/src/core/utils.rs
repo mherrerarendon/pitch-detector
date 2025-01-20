@@ -50,10 +50,7 @@ pub fn interpolated_peak_at(spectrum: &[f64], fft_point_x: usize) -> Result<FftP
         }
         idx += 1;
     };
-    let y_vals: Vec<f64> = spectrum[peak_begin_idx..=peak_end_idx_incl]
-        .iter()
-        .cloned()
-        .collect();
+    let y_vals: Vec<f64> = spectrum[peak_begin_idx..=peak_end_idx_incl].to_vec();
     let x_vals: Vec<f64> = (peak_begin_idx..=peak_end_idx_incl)
         .map(|i| i as f64)
         .collect();

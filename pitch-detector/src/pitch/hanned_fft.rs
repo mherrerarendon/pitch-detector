@@ -4,20 +4,14 @@ use crate::core::error::PitchError;
 use crate::core::fft_space::FftSpace;
 use crate::core::utils::interpolated_peak_at;
 use crate::core::FftPoint;
-use crate::pitch::IntoFrequencyDomain;
+use crate::pitch::ToFrequencyDomain;
 use rustfft::FftPlanner;
 
 use super::PitchDetector;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct HannedFftDetector {
     fft_space: Option<FftSpace>,
-}
-
-impl Default for HannedFftDetector {
-    fn default() -> Self {
-        Self { fft_space: None }
-    }
 }
 
 impl HannedFftDetector {
@@ -54,8 +48,8 @@ impl HannedFftDetector {
     }
 }
 
-impl IntoFrequencyDomain for HannedFftDetector {
-    fn into_frequency_domain(
+impl ToFrequencyDomain for HannedFftDetector {
+    fn to_frequency_domain(
         &mut self,
         signal: &[f64],
         freq_range: Option<(Range<f64>, f64)>,
@@ -103,7 +97,7 @@ impl PitchDetector for HannedFftDetector {
         freq_range: Range<f64>,
     ) -> Result<f64, PitchError> {
         let (start_bin, spectrum) =
-            self.into_frequency_domain(signal, Some((freq_range, sample_rate)));
+            self.to_frequency_domain(signal, Some((freq_range, sample_rate)));
         let max_bin = spectrum
             .iter()
             .enumerate()
@@ -120,21 +114,33 @@ impl PitchDetector for HannedFftDetector {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::test_utils::{test_fundamental_freq, test_sine_wave};
+    use crate::core::test_utils::{test_freq, test_sine_wave};
 
-    #[test]
-    fn test_from_sample_files() -> anyhow::Result<()> {
-        let mut detector = HannedFftDetector::default();
-
-        test_fundamental_freq(&mut detector, "tuner_c5.wav", 523.242)?;
-        test_fundamental_freq(&mut detector, "cello_open_a.wav", 219.383)?;
-        test_fundamental_freq(&mut detector, "cello_open_d.wav", 146.732)?;
-        test_fundamental_freq(&mut detector, "cello_open_g.wav", 97.209)?;
-
-        // Fails to detect open C, which should be around 64 Hz
-        test_fundamental_freq(&mut detector, "cello_open_c.wav", 129.046)?;
-        Ok(())
-    }
+    test_freq! {tuner_c5: {
+        detector: HannedFftDetector::default(),
+        file: "tuner_c5.wav",
+        expected_freq: 524.431
+    }}
+    test_freq! {cello_open_a: {
+        detector: HannedFftDetector::default(),
+        file: "cello_open_a.wav",
+        expected_freq: 219.885
+    }}
+    test_freq! {cello_open_d: {
+        detector: HannedFftDetector::default(),
+        file: "cello_open_d.wav",
+        expected_freq: 147.066
+    }}
+    test_freq! {cello_open_g: {
+        detector: HannedFftDetector::default(),
+        file: "cello_open_g.wav",
+        expected_freq: 97.433
+    }}
+    test_freq! {cello_open_c: {
+        detector: HannedFftDetector::default(),
+        file: "cello_open_c.wav",
+        expected_freq: 129.334 // Fails to detect open C, which should be around 64 Hz
+    }}
 
     #[test]
     fn test_from_sine_wave() -> anyhow::Result<()> {

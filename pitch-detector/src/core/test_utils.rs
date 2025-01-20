@@ -50,12 +50,40 @@ pub mod hinted {
     }
 }
 
+macro_rules! test_freq {
+    ($name:ident: {detector: $detector:expr, file: $file:expr, expected_freq: $expected_freq:expr}) => {
+        #[test]
+        fn $name() {
+            use float_cmp::ApproxEq;
+            pub const TEST_SAMPLE_RATE: f64 = 44100.0;
+            let signal = crate::core::test_utils::test_signal($file).unwrap();
+
+            let freq = $detector
+                .detect_pitch_in_range(
+                    &signal,
+                    TEST_SAMPLE_RATE,
+                    $crate::core::constants::MIN_FREQ..$crate::core::constants::MAX_FREQ,
+                )
+                .unwrap();
+
+            assert!(
+                freq.approx_eq($expected_freq, (0.02, 2)),
+                "Expected freq: {}, Actual freq: {}",
+                $expected_freq,
+                freq
+            );
+        }
+    };
+}
+
+pub(crate) use test_freq;
+
 pub fn test_fundamental_freq<D: PitchDetector>(
     detector: &mut D,
     samples_file: &str,
     expected_freq: f64,
 ) -> anyhow::Result<()> {
-    pub const TEST_SAMPLE_RATE: f64 = 44000.0;
+    pub const TEST_SAMPLE_RATE: f64 = 44100.0;
     let signal = test_signal(samples_file)?;
 
     let freq = detector.detect_pitch_in_range(&signal, TEST_SAMPLE_RATE, MIN_FREQ..MAX_FREQ)?;

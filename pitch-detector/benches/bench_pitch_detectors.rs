@@ -12,10 +12,10 @@ pub fn test_signal(filename: &str) -> anyhow::Result<Vec<f64>> {
 }
 
 fn criterion_benchmark(c: &mut Criterion) {
-    let signal = test_signal("cello_open_a.json").expect("Test file should exist");
+    let signal = test_signal("cello_open_a.wav").expect("Test file should exist");
     let mut hanned_detector = HannedFftDetector::default();
     let mut cepstrum_detector = PowerCepstrum::default();
-    let sample_rate = 44000.;
+    let sample_rate = 44100.;
     let mut group = c.benchmark_group("reduced_samples_group");
     group.significance_level(0.1).sample_size(60);
     group.bench_function("hanned fft", |b| {

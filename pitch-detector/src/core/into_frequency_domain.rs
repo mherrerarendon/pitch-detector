@@ -3,11 +3,11 @@ use std::ops::Range;
 /// This trait provides the necessary methods to analyze the frequency make-up of a signal. Note that the bin values of
 /// the resulting frequency domain might not always correspond to the traditional output of FFT, which is why additional
 /// methods like `bin_to_freq` and `freq_to_bin` are required.
-pub trait IntoFrequencyDomain {
+pub trait ToFrequencyDomain {
     /// Creates a frequency domain Vec with the given signal and optional frequency range. If frequency range is provided,
     /// the second parameter to the tuple is the sample rate, which is needed to correlate the frequency range to
     /// a bin range.
-    fn into_frequency_domain(
+    fn to_frequency_domain(
         &mut self,
         signal: &[f64],
         freq_range: Option<(Range<f64>, f64)>,

@@ -1,7 +1,7 @@
 use super::NoteRenderer;
 use crossterm::{
     cursor, execute, queue, style,
-    terminal::{self, size, ClearType, SetSize},
+    terminal::{self, ClearType, SetSize},
 };
 use pitch_detector::{
     core::{
@@ -80,23 +80,16 @@ impl TunerLayout {
 pub struct CmdLineNoteRenderer {
     cols: u16,
     rows: u16,
-    original_cols: Option<u16>,
-    original_rows: Option<u16>,
 }
 
 impl CmdLineNoteRenderer {
     pub fn new_with_rows_and_columns(cols: u16, rows: u16) -> Self {
-        Self {
-            cols,
-            rows,
-            original_cols: None,
-            original_rows: None,
-        }
+        Self { cols, rows }
     }
 }
 
 impl NoteRenderer for CmdLineNoteRenderer {
-    fn render_note(&mut self, note: NoteDetection) -> anyhow::Result<()> {
+    fn render_note(&self, note: NoteDetection) -> anyhow::Result<()> {
         let tuner_layout = TunerLayout::new(&note, self.cols);
         let tuner_string = tuner_layout.build(
             &note.previous_note_name.to_string(),
@@ -114,7 +107,7 @@ impl NoteRenderer for CmdLineNoteRenderer {
         Ok(())
     }
 
-    fn render_no_note(&mut self, error: PitchError) -> anyhow::Result<()> {
+    fn render_no_note(&self, error: PitchError) -> anyhow::Result<()> {
         let mut stdout = std::io::stdout().lock();
         queue!(
             stdout,
@@ -126,27 +119,13 @@ impl NoteRenderer for CmdLineNoteRenderer {
         Ok(())
     }
 
-    fn initialize(&mut self) -> anyhow::Result<()> {
-        let (cols, rows) = size()?;
-        self.original_cols = Some(cols);
-        self.original_rows = Some(rows);
+    fn initialize(&self) -> anyhow::Result<()> {
         let mut stdout = std::io::stdout().lock();
         execute!(
             stdout,
             terminal::Clear(ClearType::All),
             SetSize(self.cols, self.rows)
         )?;
-        Ok(())
-    }
-
-    fn tear_down(&mut self) -> anyhow::Result<()> {
-        let original_cols = self
-            .original_cols
-            .expect("input_start should be called before input_end");
-        let original_rows = self
-            .original_rows
-            .expect("input_start should be called before input_end");
-        execute!(std::io::stdout(), SetSize(original_cols, original_rows))?;
         Ok(())
     }
 }

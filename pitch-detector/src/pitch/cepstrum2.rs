@@ -67,8 +67,13 @@ pub fn cepstrum_pitch(
     let mut max_quefrency_index = start_index;
     let mut max_value = cepstrum[start_index].norm_sqr(); // Using squared magnitude
 
-    for i in start_index..end_index {
-        let value = cepstrum[i].norm_sqr();
+    for (i, quefrency) in cepstrum
+        .iter()
+        .enumerate()
+        .take(end_index)
+        .skip(start_index)
+    {
+        let value = quefrency.norm_sqr();
         if value > max_value {
             max_value = value;
             max_quefrency_index = i;
@@ -76,26 +81,13 @@ pub fn cepstrum_pitch(
     }
 
     // Step 6: Calculate pitch from the quefrency peak
-    let quefrency = max_quefrency_index as f64 / sample_rate as f64;
+    let quefrency = max_quefrency_index as f64 / sample_rate;
     if quefrency > 0.0 {
         Ok(1.0 / quefrency)
     } else {
         Err(PitchError::NoPitchDetected("No pitch detected".to_string()))
     }
 }
-
-// fn main() {
-//     // Example usage
-//     let sample_rate = 44100;
-//     let signal = vec![/* Your audio signal here as a Vec<f64> */];
-
-//     // Detect pitch using the Cepstrum method
-//     if let Some(pitch) = cepstrum_pitch(&signal, sample_rate) {
-//         println!("Detected pitch: {:.2} Hz", pitch);
-//     } else {
-//         println!("No pitch detected.");
-//     }
-// }
 
 pub struct Cepstrum2;
 
@@ -106,25 +98,40 @@ impl PitchDetector for Cepstrum2 {
         sample_rate: f64,
         freq_range: std::ops::Range<f64>,
     ) -> Result<f64, PitchError> {
-        cepstrum_pitch(&signal, sample_rate, freq_range)
+        cepstrum_pitch(signal, sample_rate, freq_range)
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::test_utils::test_fundamental_freq;
+    use crate::core::test_utils::test_freq;
 
-    #[test]
-    fn test_power() -> anyhow::Result<()> {
-        let mut detector = Cepstrum2;
-
-        test_fundamental_freq(&mut detector, "cello_open_a.wav", 218.905)?;
-        test_fundamental_freq(&mut detector, "cello_open_d.wav", 146.666)?;
-        test_fundamental_freq(&mut detector, "cello_open_g.wav", 97.130)?;
-        test_fundamental_freq(&mut detector, "cello_open_c.wav", 64.421)?;
-        Ok(())
-    }
+    test_freq! {tuner_c5: {
+        detector: Cepstrum2,
+        file: "tuner_c5.wav",
+        expected_freq: 525.
+    }}
+    test_freq! {cello_open_a: {
+        detector: Cepstrum2,
+        file: "cello_open_a.wav",
+        expected_freq: 219.402
+    }}
+    test_freq! {cello_open_d: {
+        detector: Cepstrum2,
+        file: "cello_open_d.wav",
+        expected_freq: 147.
+    }}
+    test_freq! {cello_open_g: {
+        detector: Cepstrum2,
+        file: "cello_open_g.wav",
+        expected_freq: 97.350
+    }}
+    test_freq! {cello_open_c: {
+        detector: Cepstrum2,
+        file: "cello_open_c.wav",
+        expected_freq: 64.568
+    }}
 
     // Power cepstrum doesn't work with sine waves since it looks for a harmonic sequence.
     // #[test]

@@ -2,7 +2,7 @@ mod plot;
 
 use crate::plot::plot_spectrum;
 use pitch_detector::{
-    core::{into_frequency_domain::IntoFrequencyDomain, utils::mixed_wave_signal},
+    core::{into_frequency_domain::ToFrequencyDomain, utils::mixed_wave_signal},
     pitch::{HannedFftDetector, PitchDetector, PowerCepstrum},
 };
 
@@ -20,7 +20,7 @@ pub fn test_signal(filename: &str) -> anyhow::Result<Vec<f64>> {
     Ok(reader.samples::<i16>().map(|s| s.unwrap() as f64).collect())
 }
 
-fn plot_detector_for_files<D: PitchDetector + IntoFrequencyDomain>(
+fn plot_detector_for_files<D: PitchDetector + ToFrequencyDomain>(
     mut detector: D,
     title: &str,
     test_files: &[&str],
@@ -39,7 +39,7 @@ fn plot_detector_for_files<D: PitchDetector + IntoFrequencyDomain>(
     Ok(())
 }
 
-fn plot_detector_for_freqs<D: PitchDetector + IntoFrequencyDomain>(
+fn plot_detector_for_freqs<D: PitchDetector + ToFrequencyDomain>(
     mut detector: D,
     title: &str,
     freq: Vec<f64>,

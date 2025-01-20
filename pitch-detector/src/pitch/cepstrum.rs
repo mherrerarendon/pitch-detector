@@ -6,7 +6,7 @@ use crate::{
 };
 use rustfft::{num_complex::Complex, FftPlanner};
 
-use super::{IntoFrequencyDomain, PitchDetector};
+use super::{PitchDetector, ToFrequencyDomain};
 
 #[derive(Debug, Clone)]
 pub struct PowerCepstrum {
@@ -94,8 +94,8 @@ impl PowerCepstrum {
     }
 }
 
-impl IntoFrequencyDomain for PowerCepstrum {
-    fn into_frequency_domain(
+impl ToFrequencyDomain for PowerCepstrum {
+    fn to_frequency_domain(
         &mut self,
         signal: &[f64],
         freq_range: Option<(Range<f64>, f64)>,
@@ -137,11 +137,11 @@ impl PitchDetector for PowerCepstrum {
         freq_range: Range<f64>,
     ) -> Result<f64, PitchError> {
         let (start_bin, spectrum) =
-            self.into_frequency_domain(signal, Some((freq_range, sample_rate)));
+            self.to_frequency_domain(signal, Some((freq_range, sample_rate)));
         let peak_detector = PeakFinderDetector::new(self.sigmas);
         let mut candidates = peak_detector.detect_peaks(&spectrum);
-        candidates.sort_by(|a, b| b.partial_cmp(&a).unwrap());
-        match (candidates.get(0), candidates.get(1)) {
+        candidates.sort_by(|a, b| b.partial_cmp(a).unwrap());
+        match (candidates.first(), candidates.get(1)) {
             (Some(freq_bin), Some(freq_bin_2)) => {
                 if freq_bin.magnitude / freq_bin_2.magnitude > self.prominence_threshold {
                     let FftPoint { x: bin, .. } = interpolated_peak_at(&spectrum, freq_bin.bin)?;
@@ -164,18 +164,33 @@ impl PitchDetector for PowerCepstrum {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::test_utils::test_fundamental_freq;
+    use crate::core::test_utils::test_freq;
 
-    #[test]
-    fn test_power() -> anyhow::Result<()> {
-        let mut detector = PowerCepstrum::default();
-
-        test_fundamental_freq(&mut detector, "cello_open_a.wav", 219.418)?;
-        test_fundamental_freq(&mut detector, "cello_open_d.wav", 146.730)?;
-        test_fundamental_freq(&mut detector, "cello_open_g.wav", 97.214)?;
-        test_fundamental_freq(&mut detector, "cello_open_c.wav", 64.476)?;
-        Ok(())
-    }
+    test_freq! {tuner_c5: {
+        detector: PowerCepstrum::default(),
+        file: "tuner_c5.wav",
+        expected_freq: 522.765
+    }}
+    test_freq! {cello_open_a: {
+        detector: PowerCepstrum::default(),
+        file: "cello_open_a.wav",
+        expected_freq: 219.917
+    }}
+    test_freq! {cello_open_d: {
+        detector: PowerCepstrum::default(),
+        file: "cello_open_d.wav",
+        expected_freq: 147.066
+    }}
+    test_freq! {cello_open_g: {
+        detector: PowerCepstrum::default(),
+        file: "cello_open_g.wav",
+        expected_freq: 97.433
+    }}
+    test_freq! {cello_open_c: {
+        detector: PowerCepstrum::default(),
+        file: "cello_open_c.wav",
+        expected_freq: 64.623
+    }}
 
     // Power cepstrum doesn't work with sine waves since it looks for a harmonic sequence.
     // #[test]

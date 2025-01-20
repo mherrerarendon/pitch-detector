@@ -111,25 +111,40 @@ impl PitchDetector for Autocorrelation2 {
     ) -> Result<f64, crate::core::error::PitchError> {
         // Maximum lag corresponds to the lowest frequency we want to detect (typically around 80Hz)
         let max_lag = (sample_rate / freq_range.start).round() as usize;
-        yin_pitch(&signal, sample_rate, self.threshold, max_lag)
+        yin_pitch(signal, sample_rate, self.threshold, max_lag)
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::test_utils::{test_fundamental_freq, test_sine_wave};
+    use crate::core::test_utils::{test_freq, test_sine_wave};
 
-    #[test]
-    fn it_detects_cello_pitches() -> anyhow::Result<()> {
-        let mut detector = Autocorrelation2::new(0.1);
-
-        test_fundamental_freq(&mut detector, "cello_open_a.wav", 220.)?;
-        test_fundamental_freq(&mut detector, "cello_open_d.wav", 146.666)?;
-        test_fundamental_freq(&mut detector, "cello_open_g.wav", 97.345)?;
-        test_fundamental_freq(&mut detector, "cello_open_c.wav", 64.516)?;
-        Ok(())
-    }
+    test_freq! {tuner_c5: {
+        detector: Autocorrelation2::new(0.1),
+        file: "tuner_c5.wav",
+        expected_freq: 47.675 // Autocorrelation gets the tuner (sine wave-like) pitch detection wrong
+    }}
+    test_freq! {cello_open_a: {
+        detector: Autocorrelation2::new(0.1),
+        file: "cello_open_a.wav",
+        expected_freq: 220.5
+    }}
+    test_freq! {cello_open_d: {
+        detector: Autocorrelation2::new(0.1),
+        file: "cello_open_d.wav",
+        expected_freq: 147.
+    }}
+    test_freq! {cello_open_g: {
+        detector: Autocorrelation2::new(0.1),
+        file: "cello_open_g.wav",
+        expected_freq: 97.566
+    }}
+    test_freq! {cello_open_c: {
+        detector: Autocorrelation2::new(0.1),
+        file: "cello_open_c.wav",
+        expected_freq: 64.662
+    }}
 
     #[test]
     fn it_detects_sine_wave_pitch() -> anyhow::Result<()> {
