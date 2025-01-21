@@ -93,6 +93,7 @@ pub fn yin_pitch(
 // }
 
 pub struct Autocorrelation2 {
+    /// Typical value is around 0.1
     threshold: f64,
 }
 

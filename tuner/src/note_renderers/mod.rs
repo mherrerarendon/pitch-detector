@@ -1,4 +1,5 @@
 pub mod cmd_line;
+pub mod simple_command_line;
 
 use pitch_detector::{core::error::PitchError, note::NoteDetection};
 
